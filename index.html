@@ -75,39 +75,24 @@
       display:flex;
       align-items:center;
       gap:10px;
-      padding:10px 12px;
+      padding:10px 14px;
       border-radius: 999px;
       background: rgba(0,0,0,.22);
       border: 1px solid rgba(255,255,255,.18);
       backdrop-filter: blur(8px);
       user-select:none;
-    }
-    .countdownPill .label{
-      font-weight:900;
-      font-size:12px;
-      color: rgba(255,255,255,.88);
-      letter-spacing:.6px;
-      text-transform:uppercase;
-      white-space:nowrap;
+      cursor:pointer;
     }
     .countdownPill .time{
       font-weight:900;
       font-size:14px;
       color: rgba(255,255,255,.96);
       white-space:nowrap;
-      cursor:pointer; /* ONLY this is clickable after set */
       padding:2px 6px;
       border-radius: 10px;
     }
-    .countdownPill .time:hover{
+    .countdownPill:hover .time{
       background: rgba(255,255,255,.08);
-    }
-    .countdownPill .hint{
-      font-weight:800;
-      font-size:12px;
-      color: rgba(255,255,255,.70);
-      margin-left:2px;
-      white-space:nowrap;
     }
 
     .content{ padding:20px 22px 28px; }
@@ -198,6 +183,7 @@
       font-size:13px;
     }
 
+    /* Subject screen list */
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -302,7 +288,6 @@
       .metersGrid{ grid-template-columns: 1fr; }
       .ring{ width:128px; height:128px; }
       .ring .pct{ font-size:24px; }
-      .countdownPill .hint{ display:none; }
     }
   </style>
 </head>
@@ -315,16 +300,15 @@
           <h1>CA Foundation Tracker</h1>
         </div>
 
-        <!-- Countdown in ribbon right side -->
-        <div class="countdownPill" id="countdownPill" aria-label="Exam countdown">
-          <div class="label" id="countdownLabel">Set Exam Date</div>
-          <div class="time" id="countdownTime">--d --:--:--</div>
-          <div class="hint" id="countdownHint">• click to set</div>
+        <!-- Countdown: shows "SET EXAM DATE" until you set it -->
+        <div class="countdownPill" id="countdownPill" title="Click to set/change exam date">
+          <div class="time" id="countdownTime">SET EXAM DATE</div>
         </div>
       </div>
     </header>
 
     <main class="content">
+      <!-- HOME SCREEN -->
       <section id="homeScreen">
         <div class="card">
           <div class="titleRow">
@@ -339,6 +323,7 @@
         </div>
       </section>
 
+      <!-- SUBJECT SCREEN -->
       <section id="subjectScreen" class="hidden">
         <div class="card">
           <div class="topbar">
@@ -365,7 +350,7 @@
 
   <script>
     // ----------------------------
-    // DATA
+    // DATA (your topics)
     // ----------------------------
     const SUBJECTS = {
       "Accounting": [
@@ -423,9 +408,7 @@
     };
 
     const STORAGE_KEY = "ca_foundation_tracker_v2";
-    const EXAM_DATE_KEY = "ca_exam_date_v2";     // stores ISO YYYY-MM-DD internally
-    const EXAM_SET_KEY  = "ca_exam_date_set_v2"; // "1" after user sets once
-    const DEFAULT_EXAM_DATE_ISO = "2026-06-01";
+    const EXAM_DATE_KEY = "ca_exam_date_v3"; // stored internally as ISO YYYY-MM-DD
 
     const $ = (id) => document.getElementById(id);
     function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
@@ -490,26 +473,22 @@
     }
 
     // ----------------------------
-    // Countdown date helpers (DD-MM-YYYY <-> ISO)
+    // Countdown (DD-MM-YYYY input, stored as ISO)
     // ----------------------------
     function pad2(n){ return String(n).padStart(2,"0"); }
 
     function isoToDDMMYYYY(iso){
-      // iso: YYYY-MM-DD
       const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
       if(!m) return "";
       return `${m[3]}-${m[2]}-${m[1]}`;
     }
 
     function ddmmyyyyToISO(ddmmyyyy){
-      // dd-mm-yyyy
       const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(ddmmyyyy);
       if(!m) return null;
       const dd = Number(m[1]), mm = Number(m[2]), yyyy = Number(m[3]);
       if(mm < 1 || mm > 12) return null;
-      if(dd < 1 || dd > 31) return null;
 
-      // validate actual date (handles 31 Feb etc)
       const d = new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
       if(Number.isNaN(d.getTime())) return null;
       if(d.getFullYear() !== yyyy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
@@ -518,77 +497,65 @@
     }
 
     function getExamISO(){
-      return localStorage.getItem(EXAM_DATE_KEY) || DEFAULT_EXAM_DATE_ISO;
+      return localStorage.getItem(EXAM_DATE_KEY);
     }
+
     function setExamISO(iso){
       localStorage.setItem(EXAM_DATE_KEY, iso);
-      localStorage.setItem(EXAM_SET_KEY, "1");
-      updateCountdownHeaderUI();
-    }
-    function hasUserSetExam(){
-      return localStorage.getItem(EXAM_SET_KEY) === "1";
+      updateCountdownDisplay();
     }
 
-    // Update header label/hint based on set status
-    function updateCountdownHeaderUI(){
-      if(hasUserSetExam()){
-        $("countdownLabel").textContent = "Exam In";
-        $("countdownHint").style.display = "none";
-      }else{
-        $("countdownLabel").textContent = "Set Exam Date";
-        $("countdownHint").style.display = "inline";
+    let countdownInterval = null;
+
+    function updateCountdownDisplay(){
+      const iso = getExamISO();
+      const el = $("countdownTime");
+
+      // clear old interval so it won't create multiple timers
+      if(countdownInterval) {
+        clearInterval(countdownInterval);
+        countdownInterval = null;
       }
-    }
 
-    function startCountdown(){
+      if(!iso){
+        el.textContent = "SET EXAM DATE";
+        return;
+      }
+
       function tick(){
-        const iso = getExamISO();
         const target = new Date(iso + "T09:00:00");
         const now = new Date();
         let diff = target - now;
-        if (Number.isNaN(target.getTime())) diff = 0;
-        if (diff < 0) diff = 0;
+        if(diff < 0) diff = 0;
 
-        const totalSec = Math.floor(diff / 1000);
-        const days = Math.floor(totalSec / 86400);
-        const hours = Math.floor((totalSec % 86400) / 3600);
-        const mins  = Math.floor((totalSec % 3600) / 60);
-        const secs  = totalSec % 60;
+        const totalSec = Math.floor(diff/1000);
+        const days = Math.floor(totalSec/86400);
+        const hours = Math.floor((totalSec%86400)/3600);
+        const mins = Math.floor((totalSec%3600)/60);
+        const secs = totalSec%60;
 
-        $("countdownTime").textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
+        el.textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
       }
+
       tick();
-      setInterval(tick, 1000);
+      countdownInterval = setInterval(tick, 1000);
     }
 
-    // Interaction rules:
-    // - Before date set: click anywhere on pill OR time sets date
-    // - After date set: ONLY clicking the time sets date
     function promptSetExamDate(){
-      const currentISO = getExamISO();
-      const currentDMY = isoToDDMMYYYY(currentISO);
-      const input = prompt("Set exam date (DD-MM-YYYY):", currentDMY);
+      const iso = getExamISO();
+      const current = iso ? isoToDDMMYYYY(iso) : "";
+      const input = prompt("Set exam date (DD-MM-YYYY):", current);
       if(!input) return;
 
-      const iso = ddmmyyyyToISO(input.trim());
-      if(!iso){
-        alert("Invalid date. Please use DD-MM-YYYY (example: 08-05-2026).");
+      const newISO = ddmmyyyyToISO(input.trim());
+      if(!newISO){
+        alert("Invalid date. Use DD-MM-YYYY (example: 08-05-2026).");
         return;
       }
-      setExamISO(iso);
+      setExamISO(newISO);
     }
 
-    $("countdownPill").addEventListener("click", (e) => {
-      // if already set, pill click should do nothing
-      if(hasUserSetExam()) return;
-      promptSetExamDate();
-    });
-
-    $("countdownTime").addEventListener("click", (e) => {
-      // always allow clicking the time to set/change
-      e.stopPropagation();
-      promptSetExamDate();
-    });
+    $("countdownPill").addEventListener("click", promptSetExamDate);
 
     // ----------------------------
     // NAV + UI
@@ -722,9 +689,8 @@
     });
 
     // init
-    updateCountdownHeaderUI();
-    startCountdown();
     renderHome();
+    updateCountdownDisplay();
   </script>
 </body>
 </html>
