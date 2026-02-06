@@ -81,7 +81,6 @@
       border: 1px solid rgba(255,255,255,.18);
       backdrop-filter: blur(8px);
       user-select:none;
-      cursor:pointer;
     }
     .countdownPill .label{
       font-weight:900;
@@ -96,6 +95,12 @@
       font-size:14px;
       color: rgba(255,255,255,.96);
       white-space:nowrap;
+      cursor:pointer; /* ONLY this is clickable after set */
+      padding:2px 6px;
+      border-radius: 10px;
+    }
+    .countdownPill .time:hover{
+      background: rgba(255,255,255,.08);
     }
     .countdownPill .hint{
       font-weight:800;
@@ -122,13 +127,11 @@
       margin-bottom:14px;
       gap:12px;
     }
-    /* Progress title slightly bigger */
     .titleRow .title{
       font-weight:900;
       font-size:18px;
     }
 
-    /* HOME: big meters with clickable subject name below */
     .metersGrid{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
@@ -182,7 +185,6 @@
       font-size:13px;
     }
 
-    /* Overall moved under progress card, right-aligned */
     .overallBelow{
       margin-top:14px;
       text-align:right;
@@ -196,7 +198,6 @@
       font-size:13px;
     }
 
-    /* Subject screen list */
     .topbar{
       display:flex;
       justify-content:space-between;
@@ -314,17 +315,16 @@
           <h1>CA Foundation Tracker</h1>
         </div>
 
-        <!-- Countdown in blue ribbon right side -->
-        <div class="countdownPill" id="countdownPill" title="Click to set exam date">
-          <div class="label">Exam In</div>
-          <div class="time" id="countdownText">--d --:--:--</div>
-          <div class="hint">• click to set</div>
+        <!-- Countdown in ribbon right side -->
+        <div class="countdownPill" id="countdownPill" aria-label="Exam countdown">
+          <div class="label" id="countdownLabel">Set Exam Date</div>
+          <div class="time" id="countdownTime">--d --:--:--</div>
+          <div class="hint" id="countdownHint">• click to set</div>
         </div>
       </div>
     </header>
 
     <main class="content">
-      <!-- HOME SCREEN -->
       <section id="homeScreen">
         <div class="card">
           <div class="titleRow">
@@ -333,14 +333,12 @@
 
           <div class="metersGrid" id="metersGrid"></div>
 
-          <!-- Overall % moved below progress section on the right -->
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
         </div>
       </section>
 
-      <!-- SUBJECT SCREEN -->
       <section id="subjectScreen" class="hidden">
         <div class="card">
           <div class="topbar">
@@ -367,7 +365,7 @@
 
   <script>
     // ----------------------------
-    // DATA (your topics)
+    // DATA
     // ----------------------------
     const SUBJECTS = {
       "Accounting": [
@@ -425,13 +423,16 @@
     };
 
     const STORAGE_KEY = "ca_foundation_tracker_v2";
-    const EXAM_DATE_KEY = "ca_exam_date_v1";
-    const DEFAULT_EXAM_DATE = "2026-06-01"; // change if you want
+    const EXAM_DATE_KEY = "ca_exam_date_v2";     // stores ISO YYYY-MM-DD internally
+    const EXAM_SET_KEY  = "ca_exam_date_set_v2"; // "1" after user sets once
+    const DEFAULT_EXAM_DATE_ISO = "2026-06-01";
 
     const $ = (id) => document.getElementById(id);
-
     function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
 
+    // ----------------------------
+    // Progress state
+    // ----------------------------
     function defaultState(){
       const st = {};
       for(const subj of Object.keys(SUBJECTS)){
@@ -477,11 +478,10 @@
       return { done, total, pct };
     }
 
-    // circumference for r=45 => 2*pi*45 = 282.74
+    // circumference for r=45
     function setRing(arcEl, pctEl, pct){
       const C = 282.74;
-      const offset = C - (pct/100)*C;
-      arcEl.style.strokeDashoffset = String(offset);
+      arcEl.style.strokeDashoffset = String(C - (pct/100)*C);
       pctEl.textContent = `${pct}%`;
     }
 
@@ -490,31 +490,63 @@
     }
 
     // ----------------------------
-    // Countdown in ribbon
+    // Countdown date helpers (DD-MM-YYYY <-> ISO)
     // ----------------------------
-    function getExamDateISO(){
-      return localStorage.getItem(EXAM_DATE_KEY) || DEFAULT_EXAM_DATE;
-    }
-
-    function setExamDateISO(iso){
-      localStorage.setItem(EXAM_DATE_KEY, iso);
-    }
-
     function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function isoToDDMMYYYY(iso){
+      // iso: YYYY-MM-DD
+      const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+      if(!m) return "";
+      return `${m[3]}-${m[2]}-${m[1]}`;
+    }
+
+    function ddmmyyyyToISO(ddmmyyyy){
+      // dd-mm-yyyy
+      const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(ddmmyyyy);
+      if(!m) return null;
+      const dd = Number(m[1]), mm = Number(m[2]), yyyy = Number(m[3]);
+      if(mm < 1 || mm > 12) return null;
+      if(dd < 1 || dd > 31) return null;
+
+      // validate actual date (handles 31 Feb etc)
+      const d = new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
+      if(Number.isNaN(d.getTime())) return null;
+      if(d.getFullYear() !== yyyy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
+
+      return `${m[3]}-${m[2]}-${m[1]}`;
+    }
+
+    function getExamISO(){
+      return localStorage.getItem(EXAM_DATE_KEY) || DEFAULT_EXAM_DATE_ISO;
+    }
+    function setExamISO(iso){
+      localStorage.setItem(EXAM_DATE_KEY, iso);
+      localStorage.setItem(EXAM_SET_KEY, "1");
+      updateCountdownHeaderUI();
+    }
+    function hasUserSetExam(){
+      return localStorage.getItem(EXAM_SET_KEY) === "1";
+    }
+
+    // Update header label/hint based on set status
+    function updateCountdownHeaderUI(){
+      if(hasUserSetExam()){
+        $("countdownLabel").textContent = "Exam In";
+        $("countdownHint").style.display = "none";
+      }else{
+        $("countdownLabel").textContent = "Set Exam Date";
+        $("countdownHint").style.display = "inline";
+      }
+    }
 
     function startCountdown(){
       function tick(){
-        const iso = getExamDateISO();
-        // set time to 09:00 local to avoid midnight weirdness
+        const iso = getExamISO();
         const target = new Date(iso + "T09:00:00");
         const now = new Date();
         let diff = target - now;
-
-        if (Number.isNaN(target.getTime())){
-          $("countdownText").textContent = "--d --:--:--";
-          return;
-        }
-
+        if (Number.isNaN(target.getTime())) diff = 0;
         if (diff < 0) diff = 0;
 
         const totalSec = Math.floor(diff / 1000);
@@ -523,26 +555,39 @@
         const mins  = Math.floor((totalSec % 3600) / 60);
         const secs  = totalSec % 60;
 
-        $("countdownText").textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
+        $("countdownTime").textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
       }
-
       tick();
       setInterval(tick, 1000);
     }
 
-    // Click countdown pill to set exam date
-    $("countdownPill").addEventListener("click", () => {
-      const current = getExamDateISO();
-      const input = prompt("Set exam date (YYYY-MM-DD):", current);
-      if (!input) return;
+    // Interaction rules:
+    // - Before date set: click anywhere on pill OR time sets date
+    // - After date set: ONLY clicking the time sets date
+    function promptSetExamDate(){
+      const currentISO = getExamISO();
+      const currentDMY = isoToDDMMYYYY(currentISO);
+      const input = prompt("Set exam date (DD-MM-YYYY):", currentDMY);
+      if(!input) return;
 
-      // basic validation
-      const ok = /^\d{4}-\d{2}-\d{2}$/.test(input);
-      if (!ok) {
-        alert("Please enter date in YYYY-MM-DD format.");
+      const iso = ddmmyyyyToISO(input.trim());
+      if(!iso){
+        alert("Invalid date. Please use DD-MM-YYYY (example: 08-05-2026).");
         return;
       }
-      setExamDateISO(input);
+      setExamISO(iso);
+    }
+
+    $("countdownPill").addEventListener("click", (e) => {
+      // if already set, pill click should do nothing
+      if(hasUserSetExam()) return;
+      promptSetExamDate();
+    });
+
+    $("countdownTime").addEventListener("click", (e) => {
+      // always allow clicking the time to set/change
+      e.stopPropagation();
+      promptSetExamDate();
     });
 
     // ----------------------------
@@ -677,8 +722,9 @@
     });
 
     // init
-    renderHome();
+    updateCountdownHeaderUI();
     startCountdown();
+    renderHome();
   </script>
 </body>
 </html>
