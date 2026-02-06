@@ -8,8 +8,6 @@
   <style>
     :root{
       --bg:#0b1020;
-      --panel:#0f1a2f;
-      --panel2:#0c162a;
       --text:#e8eefc;
       --muted:#a8b7d8;
       --border: 1px solid rgba(255,255,255,.10);
@@ -44,7 +42,7 @@
       background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
     }
 
-    /* Header */
+    /* Header ribbon */
     .hero{
       padding:22px 22px 18px;
       background: linear-gradient(90deg, rgba(34,197,94,.45), rgba(56,189,248,.45));
@@ -61,7 +59,7 @@
       position:relative;
       z-index:1;
       display:flex;
-      align-items:flex-end;
+      align-items:center;
       justify-content:space-between;
       gap:12px;
     }
@@ -71,12 +69,40 @@
       font-weight:900;
       letter-spacing:.2px;
     }
-    /* removed the small subtitle line here on purpose */
 
-    .overall{
+    /* Countdown pill on ribbon right */
+    .countdownPill{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.22);
+      border: 1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      user-select:none;
+      cursor:pointer;
+    }
+    .countdownPill .label{
+      font-weight:900;
+      font-size:12px;
+      color: rgba(255,255,255,.88);
+      letter-spacing:.6px;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+    .countdownPill .time{
       font-weight:900;
       font-size:14px;
-      color: rgba(255,255,255,.92);
+      color: rgba(255,255,255,.96);
+      white-space:nowrap;
+    }
+    .countdownPill .hint{
+      font-weight:800;
+      font-size:12px;
+      color: rgba(255,255,255,.70);
+      margin-left:2px;
+      white-space:nowrap;
     }
 
     .content{ padding:20px 22px 28px; }
@@ -100,12 +126,6 @@
     .titleRow .title{
       font-weight:900;
       font-size:18px;
-    }
-    .titleRow .subtle{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-      white-space:nowrap;
     }
 
     /* HOME: big meters with clickable subject name below */
@@ -157,6 +177,20 @@
     .subjectName:hover{ text-decoration: underline; }
 
     .doneText{
+      color: var(--muted);
+      font-weight:800;
+      font-size:13px;
+    }
+
+    /* Overall moved under progress card, right-aligned */
+    .overallBelow{
+      margin-top:14px;
+      text-align:right;
+      font-weight:900;
+      font-size:14px;
+      color: rgba(255,255,255,.88);
+    }
+    .overallBelow span{
       color: var(--muted);
       font-weight:800;
       font-size:13px;
@@ -267,6 +301,7 @@
       .metersGrid{ grid-template-columns: 1fr; }
       .ring{ width:128px; height:128px; }
       .ring .pct{ font-size:24px; }
+      .countdownPill .hint{ display:none; }
     }
   </style>
 </head>
@@ -278,7 +313,13 @@
         <div class="brand">
           <h1>CA Foundation Tracker</h1>
         </div>
-        <div class="overall" id="overallText">Overall: 0%</div>
+
+        <!-- Countdown in blue ribbon right side -->
+        <div class="countdownPill" id="countdownPill" title="Click to set exam date">
+          <div class="label">Exam In</div>
+          <div class="time" id="countdownText">--d --:--:--</div>
+          <div class="hint">• click to set</div>
+        </div>
       </div>
     </header>
 
@@ -288,10 +329,14 @@
         <div class="card">
           <div class="titleRow">
             <div class="title">Progress</div>
-            <!-- removed "Green ring = completed" -->
           </div>
 
           <div class="metersGrid" id="metersGrid"></div>
+
+          <!-- Overall % moved below progress section on the right -->
+          <div class="overallBelow" id="overallBelow">
+            Overall: 0% <span>(0/0)</span>
+          </div>
         </div>
       </section>
 
@@ -300,9 +345,7 @@
         <div class="card">
           <div class="topbar">
             <div class="back" id="backBtn">← Back</div>
-            <div class="titleRow" style="margin:0;">
-              <div class="subtle" id="subjectMini"></div>
-            </div>
+            <div style="color:var(--muted); font-weight:800; font-size:13px;" id="subjectMini"></div>
           </div>
 
           <div class="subjectHeader">
@@ -382,6 +425,9 @@
     };
 
     const STORAGE_KEY = "ca_foundation_tracker_v2";
+    const EXAM_DATE_KEY = "ca_exam_date_v1";
+    const DEFAULT_EXAM_DATE = "2026-06-01"; // change if you want
+
     const $ = (id) => document.getElementById(id);
 
     function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
@@ -443,6 +489,65 @@
       return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
     }
 
+    // ----------------------------
+    // Countdown in ribbon
+    // ----------------------------
+    function getExamDateISO(){
+      return localStorage.getItem(EXAM_DATE_KEY) || DEFAULT_EXAM_DATE;
+    }
+
+    function setExamDateISO(iso){
+      localStorage.setItem(EXAM_DATE_KEY, iso);
+    }
+
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function startCountdown(){
+      function tick(){
+        const iso = getExamDateISO();
+        // set time to 09:00 local to avoid midnight weirdness
+        const target = new Date(iso + "T09:00:00");
+        const now = new Date();
+        let diff = target - now;
+
+        if (Number.isNaN(target.getTime())){
+          $("countdownText").textContent = "--d --:--:--";
+          return;
+        }
+
+        if (diff < 0) diff = 0;
+
+        const totalSec = Math.floor(diff / 1000);
+        const days = Math.floor(totalSec / 86400);
+        const hours = Math.floor((totalSec % 86400) / 3600);
+        const mins  = Math.floor((totalSec % 3600) / 60);
+        const secs  = totalSec % 60;
+
+        $("countdownText").textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
+    // Click countdown pill to set exam date
+    $("countdownPill").addEventListener("click", () => {
+      const current = getExamDateISO();
+      const input = prompt("Set exam date (YYYY-MM-DD):", current);
+      if (!input) return;
+
+      // basic validation
+      const ok = /^\d{4}-\d{2}-\d{2}$/.test(input);
+      if (!ok) {
+        alert("Please enter date in YYYY-MM-DD format.");
+        return;
+      }
+      setExamDateISO(input);
+    });
+
+    // ----------------------------
+    // NAV + UI
+    // ----------------------------
     let currentSubject = null;
 
     function showHome(){
@@ -462,7 +567,7 @@
     function renderHome(){
       const state = loadState();
       const overall = overallStats(state);
-      $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
+      $("overallBelow").innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
 
       const grid = $("metersGrid");
       grid.innerHTML = "";
@@ -512,7 +617,7 @@
 
       const {done,total,pct} = statsFor(state, subj);
       $("subjectRight").textContent = `${done}/${total} done • ${pct}%`;
-      $("subjectMini").textContent = ""; // keep it clean
+      $("subjectMini").textContent = "";
 
       const wrap = $("topics");
       wrap.innerHTML = "";
@@ -540,7 +645,7 @@
           $("subjectRight").textContent = `${s.done}/${s.total} done • ${s.pct}%`;
 
           const overall = overallStats(newState);
-          $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
+          $("overallBelow").innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
         });
 
         wrap.appendChild(row);
@@ -571,7 +676,9 @@
       else renderHome();
     });
 
+    // init
     renderHome();
+    startCountdown();
   </script>
 </body>
 </html>
