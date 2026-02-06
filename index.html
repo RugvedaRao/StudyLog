@@ -1,179 +1,634 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Study Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CA Foundation Study Tracker</title>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
+    :root{
+      --bg:#0b1020;
+      --panel:#0f1a2f;
+      --panel2:#0c162a;
+      --text:#e8eefc;
+      --muted:#9fb0d0;
+      --accent:#2dd4bf;
+      --accent2:#38bdf8;
+      --border: 1px solid rgba(255,255,255,.08);
+      --radius:18px;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
     }
 
-    .header {
-      background: linear-gradient(90deg, #14b8a6, #3b82f6);
-      padding: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 15% 15%, rgba(45,212,191,.12), transparent 55%),
+                  radial-gradient(900px 600px at 85% 25%, rgba(56,189,248,.10), transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:28px 18px;
     }
 
-    .header h1 {
-      margin: 0;
-      font-size: 22px;
+    .app{
+      width:min(1080px, 100%);
+      border-radius: 26px;
+      overflow:hidden;
+      border: var(--border);
+      box-shadow: var(--shadow);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
     }
 
-    .progress-circle {
-      width: 70px;
-      height: 70px;
-      border-radius: 50%;
-      background: conic-gradient(#ffffff 0% 40%, rgba(255,255,255,0.2) 40% 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      font-size: 16px;
-      color: black;
-      background-color: white;
+    .hero{
+      padding:22px 22px 18px;
+      background: linear-gradient(90deg, rgba(45,212,191,.55), rgba(56,189,248,.55));
+      position:relative;
+    }
+    .hero:after{
+      content:"";
+      position:absolute;
+      inset:0;
+      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.42));
+      pointer-events:none;
+    }
+    .hero-inner{
+      position:relative;
+      z-index:1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:14px;
+    }
+    .brand h1{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+    }
+    .brand small{
+      display:block;
+      margin-top:4px;
+      color: rgba(255,255,255,.85);
+      font-weight:700;
+      font-size:11px;
+      letter-spacing:.8px;
+      text-transform:uppercase;
     }
 
-    .container {
-      padding: 20px;
+    .content{ padding:20px 22px 26px; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
     }
 
-    .card {
-      background: #1e293b;
-      padding: 20px;
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border: var(--border);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+    .card-title{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:12px;
+      font-weight:900;
+      font-size:13px;
+    }
+    .subtle{ color: var(--muted); font-weight:700; font-size:12px; }
+
+    /* Progress ring */
+    .meters{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .meter{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      padding:12px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .ring{
+      width:56px;
+      height:56px;
+      border-radius:999px;
+      display:grid;
+      place-items:center;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.18);
+      position:relative;
+      flex:0 0 auto;
+    }
+    .ring .pct{
+      position:absolute;
+      font-weight:900;
+      font-size:12px;
+      color: rgba(255,255,255,.95);
+    }
+    .ring svg{display:block}
+    .meter .meta{
+      line-height:1.25;
+      min-width:0;
+    }
+    .meter .meta .name{
+      font-weight:900;
+      font-size:13px;
+      margin:0;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .meter .meta .small{
+      font-weight:700;
+      font-size:12px;
+      color: var(--muted);
+      margin-top:4px;
+    }
+
+    /* Subject buttons */
+    .subjectBtns{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:12px;
+    }
+    .btnCard{
+      cursor:pointer;
+      padding:14px;
+      border-radius: 16px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.10);
+      transition: transform .08s ease;
+      user-select:none;
+    }
+    .btnCard:hover{ transform: translateY(-2px); }
+    .btnCard .title{ font-weight:900; margin:0; }
+    .btnCard .desc{ margin-top:6px; color: var(--muted); font-weight:700; font-size:12px; }
+
+    /* Chapters screen */
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:12px;
+    }
+    .back{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      cursor:pointer;
+      user-select:none;
+      font-weight:900;
+      color: rgba(255,255,255,.9);
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.14);
+      padding:10px 12px;
       border-radius: 12px;
-      margin-bottom: 20px;
+    }
+    .back:active{ transform: scale(.99); }
+
+    .chapters{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:10px;
+    }
+    .row{
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      background: rgba(0,0,0,.18);
+      border: 1px solid rgba(255,255,255,.10);
+    }
+    .row input[type="checkbox"]{
+      margin-top:2px;
+      width:18px;
+      height:18px;
+      accent-color: var(--accent);
+      flex:0 0 auto;
+    }
+    .row label{
+      cursor:pointer;
+      font-weight:800;
+      font-size:13px;
+      line-height:1.45;
     }
 
-    .countdown {
-      display: flex;
-      gap: 20px;
-      font-size: 20px;
-      font-weight: bold;
+    .actions{
+      display:flex;
+      gap:10px;
+      margin-top:14px;
+      flex-wrap:wrap;
     }
-
-    .quote {
-      text-align: center;
-      font-style: italic;
-      font-size: 16px;
-    }
-
-    .buttons {
-      display: flex;
-      gap: 15px;
-      margin-top: 15px;
-    }
-
-    .btn {
-      background: #334155;
-      padding: 15px;
+    button{
+      border:none;
       border-radius: 10px;
-      text-align: center;
-      flex: 1;
-      cursor: pointer;
+      padding:10px 12px;
+      font-weight:900;
+      cursor:pointer;
+      color:#061223;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+    button.secondary{
+      color: rgba(255,255,255,.9);
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.14);
     }
 
-    .btn:hover {
-      background: #475569;
-    }
+    .hidden{ display:none !important; }
 
-    input {
-      padding: 8px;
-      border-radius: 6px;
-      border: none;
-      margin-top: 10px;
-    }
-
-    button {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: none;
-      background: #14b8a6;
-      color: black;
-      cursor: pointer;
-      margin-left: 5px;
+    @media (max-width: 880px){
+      .grid{ grid-template-columns: 1fr; }
+      .meters{ grid-template-columns: 1fr; }
+      .subjectBtns{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
+  <div class="app">
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="brand">
+          <h1>CA Foundation Tracker</h1>
+          <small>Subjects • Chapters • Progress</small>
+        </div>
+        <div class="subtle" id="overallText">Overall: 0%</div>
+      </div>
+    </header>
 
-  <div class="header">
-    <h1>Study Dashboard</h1>
-    <div class="progress-circle" id="progressCircle">40%</div>
+    <main class="content">
+
+      <!-- HOME SCREEN -->
+      <section id="homeScreen">
+        <div class="grid">
+          <div class="card">
+            <div class="card-title">
+              <span>📊 Subject Progress</span>
+              <span class="subtle">Auto updates</span>
+            </div>
+
+            <div class="meters" id="meters"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">
+              <span>📚 Open Subject</span>
+              <span class="subtle">Tick chapters</span>
+            </div>
+
+            <div class="subjectBtns" id="subjectBtns"></div>
+
+            <div style="margin-top:12px; color: var(--muted); font-weight:700; font-size:12px; line-height:1.55;">
+              Tip: Tick completed chapters inside each subject. Progress is saved automatically (local storage).
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SUBJECT SCREEN -->
+      <section id="subjectScreen" class="hidden">
+        <div class="card">
+          <div class="topbar">
+            <div class="back" id="backBtn">← Back</div>
+            <div class="subtle" id="subjectHeaderRight"></div>
+          </div>
+
+          <div class="card-title" style="margin-bottom:6px;">
+            <span id="subjectTitle">Subject</span>
+            <span class="subtle" id="subjectProgressText">0%</span>
+          </div>
+
+          <div class="chapters" id="chapters"></div>
+
+          <div class="actions">
+            <button class="secondary" id="markAll">Mark All</button>
+            <button class="secondary" id="clearAll">Clear All</button>
+            <button id="resetAll">Reset ALL Subjects</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
   </div>
 
-  <div class="container">
+  <script>
+    // ----------------------------
+    // DATA (from your list)
+    // ----------------------------
+    const SUBJECTS = {
+      "Accounting": [
+        "Theoretical Framework",
+        "Accounting Process",
+        "Bank Reconciliation Statement",
+        "Inventories",
+        "Depreciation and Amortisation",
+        "Bills of Exchange and Promissory Notes",
+        "Final Accounts of Sole Proprietors",
+        "Financial Statements of Not-for-Profit Organizations",
+        "Accounts from Incomplete Records",
+        "Partnership and LLP Accounts",
+        "Company Accounts"
+      ],
+      "Business Laws": [
+        "Indian Regulatory Framework",
+        "The Indian Contract Act, 1872",
+        "The Sale of Goods Act, 1930",
+        "The Indian Partnership Act, 1932",
+        "The Limited Liability Partnership Act, 2008",
+        "The Companies Act, 2013",
+        "The Negotiable Instruments Act, 1881"
+      ],
+      "Quantitative Aptitude": [
+        "Ratio, Proportion, Indices & Logarithms",
+        "Equations",
+        "Linear Inequalities",
+        "Mathematics of Finance",
+        "Permutations and Combinations",
+        "Sequence and Series",
+        "Sets, Relations & Functions",
+        "Differential & Integral Calculus",
+        "Number Series, Coding-Decoding, Odd Man Out",
+        "Direction Tests",
+        "Seating Arrangements",
+        "Blood Relations",
+        "Statistical Description of Data & Sampling",
+        "Measures of Central Tendency & Dispersion",
+        "Probability",
+        "Theoretical Distributions"
+      ],
+      "Business Economics": [
+        "Introduction to Business Economics",
+        "Theory of Demand and Supply",
+        "Theory of Production and Cost",
+        "Price Determination in Different Markets",
+        "Determination of National Income",
+        "Business Cycles",
+        "Public Finance",
+        "Money Market",
+        "International Trade",
+        "Indian Economy"
+      ]
+    };
 
-    <div class="card">
-      <h3>Countdown to Exam</h3>
-      <div class="countdown">
-        <div><span id="days">0</span> Days</div>
-        <div><span id="hours">0</span> Hours</div>
-        <div><span id="minutes">0</span> Minutes</div>
-        <div><span id="seconds">0</span> Seconds</div>
-      </div>
+    // ----------------------------
+    // STORAGE
+    // state shape:
+    // {
+    //   "Accounting": [true,false,...],
+    //   "Business Laws": [...],
+    //   ...
+    // }
+    // ----------------------------
+    const STORAGE_KEY = "ca_foundation_subject_chapters_v1";
 
-      <div>
-        <input type="date" id="examDate">
-        <button onclick="setExamDate()">Set Date</button>
-      </div>
-    </div>
+    const $ = (id) => document.getElementById(id);
 
-    <div class="card quote">
-      <p id="quoteText">"Success is the sum of small efforts repeated daily."</p>
-    </div>
+    function safeParse(json){
+      try { return JSON.parse(json); } catch { return null; }
+    }
 
-    <div class="card">
-      <h3>Quick Access</h3>
-      <div class="buttons">
-        <div class="btn">My Classes</div>
-        <div class="btn">Notes</div>
-        <div class="btn">Important Docs</div>
-      </div>
-    </div>
+    function defaultState(){
+      const st = {};
+      for (const subj of Object.keys(SUBJECTS)){
+        st[subj] = Array(SUBJECTS[subj].length).fill(false);
+      }
+      return st;
+    }
 
-  </div>
+    function loadState(){
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const parsed = raw ? safeParse(raw) : null;
 
-<script>
-  let examDate = localStorage.getItem("examDate");
+      const base = defaultState();
+      if (!parsed || typeof parsed !== "object") return base;
 
-  if (examDate) {
-    startCountdown(new Date(examDate));
-  }
+      // Merge safely in case chapter counts change
+      for (const subj of Object.keys(base)){
+        const arr = Array.isArray(parsed[subj]) ? parsed[subj] : [];
+        base[subj] = base[subj].map((_, i) => Boolean(arr[i]));
+      }
+      return base;
+    }
 
-  function setExamDate() {
-    const dateInput = document.getElementById("examDate").value;
-    if (!dateInput) return;
-    localStorage.setItem("examDate", dateInput);
-    startCountdown(new Date(dateInput));
-  }
+    function saveState(state){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
 
-  function startCountdown(targetDate) {
-    setInterval(() => {
-      const now = new Date();
-      const diff = targetDate - now;
+    function subjectStats(state, subj){
+      const arr = state[subj] || [];
+      const done = arr.filter(Boolean).length;
+      const total = arr.length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      return { done, total, pct };
+    }
 
-      if (diff <= 0) return;
+    function overallStats(state){
+      let done = 0, total = 0;
+      for (const subj of Object.keys(SUBJECTS)){
+        const s = subjectStats(state, subj);
+        done += s.done;
+        total += s.total;
+      }
+      const pct = total === 0 ? 0 : Math.round((done/total) * 100);
+      return { done, total, pct };
+    }
 
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const minutes = Math.floor((diff / (1000 * 60)) % 60);
-      const seconds = Math.floor((diff / 1000) % 60);
+    // ring circumference for r=20 => 125.66, but we use r=20? Here we use r=20 in svg below in renderMeterRing.
+    function renderMeterRing(elArc, elPct, pct){
+      const C = 125.66; // 2*pi*20
+      const offset = C - (pct/100) * C;
+      elArc.style.strokeDashoffset = String(offset);
+      elPct.textContent = `${pct}%`;
+    }
 
-      document.getElementById("days").innerText = days;
-      document.getElementById("hours").innerText = hours;
-      document.getElementById("minutes").innerText = minutes;
-      document.getElementById("seconds").innerText = seconds;
-    }, 1000);
-  }
-</script>
+    // ----------------------------
+    // HOME UI
+    // ----------------------------
+    function renderHome(){
+      const state = loadState();
 
+      // overall
+      const overall = overallStats(state);
+      $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
+
+      // meters
+      const meters = $("meters");
+      meters.innerHTML = "";
+
+      for (const subj of Object.keys(SUBJECTS)){
+        const {done,total,pct} = subjectStats(state, subj);
+
+        const meter = document.createElement("div");
+        meter.className = "meter";
+
+        meter.innerHTML = `
+          <div class="ring">
+            <div class="pct" id="pct_${cssId(subj)}">${pct}%</div>
+            <svg width="56" height="56" viewBox="0 0 56 56" aria-hidden="true">
+              <circle cx="28" cy="28" r="20" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="6"></circle>
+              <circle id="arc_${cssId(subj)}" cx="28" cy="28" r="20" fill="none"
+                stroke="rgba(255,255,255,.92)" stroke-width="6"
+                stroke-linecap="round"
+                stroke-dasharray="125.66"
+                stroke-dashoffset="125.66"
+                transform="rotate(-90 28 28)"></circle>
+            </svg>
+          </div>
+          <div class="meta">
+            <p class="name">${subj}</p>
+            <div class="small">${done}/${total} chapters done</div>
+          </div>
+        `;
+
+        meters.appendChild(meter);
+
+        // set ring
+        const arc = meter.querySelector(`#arc_${cssId(subj)}`);
+        const pctEl = meter.querySelector(`#pct_${cssId(subj)}`);
+        renderMeterRing(arc, pctEl, pct);
+      }
+
+      // subject buttons
+      const btns = $("subjectBtns");
+      btns.innerHTML = "";
+
+      for (const subj of Object.keys(SUBJECTS)){
+        const s = subjectStats(state, subj);
+        const b = document.createElement("div");
+        b.className = "btnCard";
+        b.innerHTML = `
+          <p class="title">${subj}</p>
+          <div class="desc">${s.done}/${s.total} completed • Click to open</div>
+        `;
+        b.addEventListener("click", () => openSubject(subj));
+        btns.appendChild(b);
+      }
+    }
+
+    function cssId(name){
+      return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
+    }
+
+    // ----------------------------
+    // SUBJECT UI
+    // ----------------------------
+    let currentSubject = null;
+
+    function openSubject(subj){
+      currentSubject = subj;
+
+      $("homeScreen").classList.add("hidden");
+      $("subjectScreen").classList.remove("hidden");
+
+      renderSubject();
+    }
+
+    function renderSubject(){
+      const state = loadState();
+      const subj = currentSubject;
+
+      $("subjectTitle").textContent = subj;
+
+      const {done,total,pct} = subjectStats(state, subj);
+      $("subjectProgressText").textContent = `${pct}%`;
+      $("subjectHeaderRight").textContent = `${done}/${total} done`;
+
+      const wrap = $("chapters");
+      wrap.innerHTML = "";
+
+      const list = SUBJECTS[subj];
+      const checks = state[subj];
+
+      list.forEach((chapter, idx) => {
+        const row = document.createElement("div");
+        row.className = "row";
+
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = `ch_${idx}`;
+        cb.checked = Boolean(checks[idx]);
+
+        const label = document.createElement("label");
+        label.htmlFor = cb.id;
+        label.textContent = chapter;
+
+        cb.addEventListener("change", () => {
+          const newState = loadState();
+          newState[subj][idx] = cb.checked;
+          saveState(newState);
+          // update subject header + keep list
+          renderSubjectHeaderOnly(newState, subj);
+          // also update home meters in background so when you go back, it is updated
+        });
+
+        row.appendChild(cb);
+        row.appendChild(label);
+        wrap.appendChild(row);
+      });
+    }
+
+    function renderSubjectHeaderOnly(state, subj){
+      const {done,total,pct} = subjectStats(state, subj);
+      $("subjectProgressText").textContent = `${pct}%`;
+      $("subjectHeaderRight").textContent = `${done}/${total} done`;
+      // also overall header on top
+      const overall = overallStats(state);
+      $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
+    }
+
+    // ----------------------------
+    // Buttons / Actions
+    // ----------------------------
+    $("backBtn").addEventListener("click", () => {
+      $("subjectScreen").classList.add("hidden");
+      $("homeScreen").classList.remove("hidden");
+      currentSubject = null;
+      renderHome();
+    });
+
+    $("markAll").addEventListener("click", () => {
+      if (!currentSubject) return;
+      const state = loadState();
+      state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
+      saveState(state);
+      renderSubject();
+    });
+
+    $("clearAll").addEventListener("click", () => {
+      if (!currentSubject) return;
+      const state = loadState();
+      state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
+      saveState(state);
+      renderSubject();
+    });
+
+    $("resetAll").addEventListener("click", () => {
+      localStorage.removeItem(STORAGE_KEY);
+      if (currentSubject){
+        renderSubject();
+      } else {
+        renderHome();
+      }
+    });
+
+    // ----------------------------
+    // INIT
+    // ----------------------------
+    renderHome();
+  </script>
 </body>
 </html>
+
