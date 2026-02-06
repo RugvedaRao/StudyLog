@@ -1,605 +1,315 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CA Foundation Tracker</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CA Foundation Tracker</title>
 
-  <style>
-    :root{
-      --bg:#0b1020;
-      --panel:#0f1a2f;
-      --panel2:#0c162a;
-      --text:#e8eefc;
-      --muted:#a8b7d8;
-      --border: 1px solid rgba(255,255,255,.10);
-      --shadow: 0 18px 40px rgba(0,0,0,.35);
-      --radius:18px;
+<style>
+:root{
+  --bg:#0b1020;
+  --text:#e8eefc;
+  --muted:#a8b7d8;
+  --border:1px solid rgba(255,255,255,.10);
+  --green:#22c55e;
+  --accent:#38bdf8;
+}
 
-      --green:#22c55e;     /* progress color */
-      --green2:#86efac;    /* subtle glow */
-      --accent:#38bdf8;
-    }
+*{box-sizing:border-box}
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 800px at 15% 15%, rgba(34,197,94,.10), transparent 55%),
-        radial-gradient(900px 600px at 85% 25%, rgba(56,189,248,.10), transparent 55%),
-        var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:26px 16px;
-    }
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto;
+  background:radial-gradient(circle at 20% 20%, rgba(34,197,94,.08), transparent 50%),var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:25px;
+}
 
-    .app{
-      width:min(1100px, 100%);
-      border-radius: 26px;
-      overflow:hidden;
-      border: var(--border);
-      box-shadow: var(--shadow);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-    }
+.app{
+  width:100%;
+  max-width:1100px;
+  border-radius:20px;
+  border:var(--border);
+  overflow:hidden;
+}
 
-    /* Header */
-    .hero{
-      padding:22px 22px 18px;
-      background: linear-gradient(90deg, rgba(34,197,94,.45), rgba(56,189,248,.45));
-      position:relative;
-    }
-    .hero:after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.45));
-      pointer-events:none;
-    }
-    .hero-inner{
-      position:relative;
-      z-index:1;
-      display:flex;
-      align-items:flex-end;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:24px;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-    .brand small{
-      display:block;
-      margin-top:6px;
-      color: rgba(255,255,255,.88);
-      font-weight:700;
-      font-size:12px;
-      letter-spacing:.8px;
-      text-transform:uppercase;
-    }
-    .overall{
-      font-weight:900;
-      font-size:14px;
-      color: rgba(255,255,255,.92);
-    }
+.hero{
+  padding:20px;
+  background:linear-gradient(90deg, rgba(34,197,94,.5), rgba(56,189,248,.5));
+}
 
-    .content{ padding:20px 22px 28px; }
+.hero h1{
+  margin:0;
+  font-size:22px;
+  font-weight:900;
+}
 
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      border: var(--border);
-      border-radius: var(--radius);
-      padding:18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-    }
+.content{
+  padding:20px;
+}
 
-    .titleRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:14px;
-      gap:12px;
-    }
-    .titleRow .title{
-      font-weight:900;
-      font-size:15px;
-    }
-    .titleRow .subtle{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-      white-space:nowrap;
-    }
+.card{
+  background:rgba(255,255,255,.03);
+  border:var(--border);
+  border-radius:16px;
+  padding:18px;
+}
 
-    /* HOME: big meters with clickable subject name below */
-    .metersGrid{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:14px;
-    }
+.mainTitle{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:15px;
+}
 
-    .meterCard{
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      padding:14px 12px 12px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-    }
+.metersGrid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+}
 
-    .ring{
-      width:120px;
-      height:120px;
-      border-radius:999px;
-      display:grid;
-      place-items:center;
-      position:relative;
-      background: rgba(0,0,0,.16);
-      border: 1px solid rgba(255,255,255,.14);
-      box-shadow: 0 0 0 1px rgba(134,239,172,.06);
-    }
-    .ring .pct{
-      position:absolute;
-      font-weight:900;
-      font-size:22px;
-      color: rgba(255,255,255,.95);
-    }
-    .ring svg{ display:block; }
+.meterCard{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
 
-    .subjectName{
-      font-weight:900;
-      font-size:15px;
-      color: rgba(255,255,255,.95);
-      cursor:pointer;
-      user-select:none;
-      text-align:center;
-      line-height:1.2;
-    }
-    .subjectName:hover{ text-decoration: underline; }
+.ring{
+  width:120px;
+  height:120px;
+  position:relative;
+}
 
-    .doneText{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-    }
+.ring svg{
+  transform:rotate(-90deg);
+}
 
-    /* Subject screen list */
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .back{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      cursor:pointer;
-      user-select:none;
-      font-weight:900;
-      font-size:14px;
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.14);
-      padding:10px 12px;
-      border-radius: 12px;
-    }
+.pct{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:22px;
+  font-weight:900;
+}
 
-    .subjectHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:10px;
-    }
-    .subjectHeader h2{
-      margin:0;
-      font-size:18px;
-      font-weight:900;
-    }
-    .subjectHeader .right{
-      color: var(--muted);
-      font-weight:900;
-      font-size:14px;
-    }
+.subjectName{
+  font-size:15px;
+  font-weight:900;
+  cursor:pointer;
+  text-align:center;
+}
 
-    .topics{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:10px;
-    }
+.subjectName:hover{
+  text-decoration:underline;
+}
 
-    .topicRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-    }
+.doneText{
+  font-size:13px;
+  color:var(--muted);
+  font-weight:800;
+}
 
-    .topicRow .topicName{
-      font-weight:800;
-      font-size:14px;
-      line-height:1.35;
-      color: rgba(255,255,255,.95);
-    }
+.hidden{display:none}
 
-    .topicRow input[type="checkbox"]{
-      width:20px;
-      height:20px;
-      accent-color: var(--green);
-      flex:0 0 auto;
-      cursor:pointer;
-    }
+.topicRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.05);
+  margin-bottom:8px;
+}
 
-    .actions{
-      display:flex;
-      gap:10px;
-      margin-top:14px;
-      flex-wrap:wrap;
-    }
-    button{
-      border:none;
-      border-radius: 10px;
-      padding:10px 12px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      color:#061223;
-      background: linear-gradient(90deg, var(--green), var(--accent));
-    }
-    button.secondary{
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.14);
-    }
+.topicName{
+  font-size:14px;
+  font-weight:800;
+}
 
-    .hidden{ display:none !important; }
+.topicRow input{
+  width:20px;
+  height:20px;
+  accent-color:var(--green);
+}
 
-    @media (max-width: 980px){
-      .metersGrid{ grid-template-columns: repeat(2, 1fr); }
-    }
-    @media (max-width: 520px){
-      .metersGrid{ grid-template-columns: 1fr; }
-      .ring{ width:128px; height:128px; }
-      .ring .pct{ font-size:24px; }
-    }
-  </style>
+.back{
+  cursor:pointer;
+  font-weight:900;
+  margin-bottom:15px;
+}
+
+@media(max-width:1000px){
+  .metersGrid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:600px){
+  .metersGrid{grid-template-columns:1fr;}
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <header class="hero">
-      <div class="hero-inner">
-        <div class="brand">
-          <h1>CA Foundation Tracker</h1>
-          <small>Click subject name → tick topics</small>
-        </div>
-        <div class="overall" id="overallText">Overall: 0%</div>
-      </div>
-    </header>
 
-    <main class="content">
-      <!-- HOME SCREEN -->
-      <section id="homeScreen">
-        <div class="card">
-          <div class="titleRow">
-            <div class="title">📊 Progress</div>
-            <div class="subtle">Green ring = completed</div>
-          </div>
-
-          <div class="metersGrid" id="metersGrid"></div>
-        </div>
-      </section>
-
-      <!-- SUBJECT SCREEN -->
-      <section id="subjectScreen" class="hidden">
-        <div class="card">
-          <div class="topbar">
-            <div class="back" id="backBtn">← Back</div>
-            <div class="subtle" id="subjectMini"></div>
-          </div>
-
-          <div class="subjectHeader">
-            <h2 id="subjectTitle">Subject</h2>
-            <div class="right" id="subjectRight">0/0 done • 0%</div>
-          </div>
-
-          <div class="topics" id="topics"></div>
-
-          <div class="actions">
-            <button class="secondary" id="markAll">Mark All</button>
-            <button class="secondary" id="clearAll">Clear All</button>
-            <button id="resetAll">Reset ALL</button>
-          </div>
-        </div>
-      </section>
-    </main>
+<div class="app">
+  <div class="hero">
+    <h1>CA Foundation Tracker</h1>
   </div>
 
-  <script>
-    // ----------------------------
-    // DATA (your chapters/topics)
-    // ----------------------------
-    const SUBJECTS = {
-      "Accounting": [
-        "Theoretical Framework",
-        "Accounting Process",
-        "Bank Reconciliation Statement",
-        "Inventories",
-        "Depreciation and Amortisation",
-        "Bills of Exchange and Promissory Notes",
-        "Final Accounts of Sole Proprietors",
-        "Financial Statements of Not-for-Profit Organizations",
-        "Accounts from Incomplete Records",
-        "Partnership and LLP Accounts",
-        "Company Accounts"
-      ],
-      "Business Laws": [
-        "Indian Regulatory Framework",
-        "The Indian Contract Act, 1872",
-        "The Sale of Goods Act, 1930",
-        "The Indian Partnership Act, 1932",
-        "The Limited Liability Partnership Act, 2008",
-        "The Companies Act, 2013",
-        "The Negotiable Instruments Act, 1881"
-      ],
-      "Quantitative Aptitude": [
-        "Ratio, Proportion, Indices & Logarithms",
-        "Equations",
-        "Linear Inequalities",
-        "Mathematics of Finance",
-        "Permutations and Combinations",
-        "Sequence and Series",
-        "Sets, Relations & Functions",
-        "Differential & Integral Calculus",
-        "Number Series, Coding-Decoding, Odd Man Out",
-        "Direction Tests",
-        "Seating Arrangements",
-        "Blood Relations",
-        "Statistical Description of Data & Sampling",
-        "Measures of Central Ten dency & Dispersion".replace("Ten dency","Tendency"),
-        "Probability",
-        "Theoretical Distributions"
-      ],
-      "Business Economics": [
-        "Introduction to Business Economics",
-        "Theory of Demand and Supply",
-        "Theory of Production and Cost",
-        "Price Determination in Different Markets",
-        "Determination of National Income",
-        "Business Cycles",
-        "Public Finance",
-        "Money Market",
-        "International Trade",
-        "Indian Economy"
-      ]
-    };
+  <div class="content">
 
-    // ----------------------------
-    // STORAGE
-    // ----------------------------
-    const STORAGE_KEY = "ca_foundation_tracker_v2";
-    const $ = (id) => document.getElementById(id);
+    <!-- HOME -->
+    <section id="homeScreen">
+      <div class="card">
+        <div class="mainTitle">Progress</div>
+        <div class="metersGrid" id="metersGrid"></div>
+      </div>
+    </section>
 
-    function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
+    <!-- SUBJECT -->
+    <section id="subjectScreen" class="hidden">
+      <div class="card">
+        <div class="back" onclick="showHome()">← Back</div>
+        <h2 id="subjectTitle"></h2>
+        <div id="topics"></div>
+      </div>
+    </section>
 
-    function defaultState(){
-      const st = {};
-      for(const subj of Object.keys(SUBJECTS)){
-        st[subj] = Array(SUBJECTS[subj].length).fill(false);
-      }
-      return st;
+  </div>
+</div>
+
+<script>
+const SUBJECTS = {
+"Accounting":[
+"Theoretical Framework","Accounting Process","Bank Reconciliation Statement",
+"Inventories","Depreciation and Amortisation",
+"Bills of Exchange and Promissory Notes",
+"Final Accounts of Sole Proprietors",
+"Financial Statements of Not-for-Profit Organizations",
+"Accounts from Incomplete Records",
+"Partnership and LLP Accounts","Company Accounts"
+],
+"Business Laws":[
+"Indian Regulatory Framework","The Indian Contract Act, 1872",
+"The Sale of Goods Act, 1930","The Indian Partnership Act, 1932",
+"The Limited Liability Partnership Act, 2008",
+"The Companies Act, 2013","The Negotiable Instruments Act, 1881"
+],
+"Quantitative Aptitude":[
+"Ratio, Proportion, Indices & Logarithms","Equations","Linear Inequalities",
+"Mathematics of Finance","Permutations and Combinations",
+"Sequence and Series","Sets, Relations & Functions",
+"Differential & Integral Calculus",
+"Number Series, Coding-Decoding, Odd Man Out",
+"Direction Tests","Seating Arrangements","Blood Relations",
+"Statistical Description of Data & Sampling",
+"Measures of Central Tendency & Dispersion",
+"Probability","Theoretical Distributions"
+],
+"Business Economics":[
+"Introduction to Business Economics","Theory of Demand and Supply",
+"Theory of Production and Cost",
+"Price Determination in Different Markets",
+"Determination of National Income","Business Cycles",
+"Public Finance","Money Market",
+"International Trade","Indian Economy"
+]
+};
+
+const STORAGE_KEY="ca_tracker_v3";
+
+function getState(){
+  const raw=localStorage.getItem(STORAGE_KEY);
+  if(!raw){
+    const base={};
+    for(let s in SUBJECTS){
+      base[s]=Array(SUBJECTS[s].length).fill(false);
     }
+    return base;
+  }
+  return JSON.parse(raw);
+}
 
-    function loadState(){
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? safeParse(raw) : null;
-      const base = defaultState();
+function saveState(state){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(state));
+}
 
-      if(!parsed || typeof parsed !== "object") return base;
+function calc(subj,state){
+  const arr=state[subj];
+  const done=arr.filter(Boolean).length;
+  const total=arr.length;
+  const pct=Math.round((done/total)*100);
+  return {done,total,pct};
+}
 
-      for(const subj of Object.keys(base)){
-        const arr = Array.isArray(parsed[subj]) ? parsed[subj] : [];
-        base[subj] = base[subj].map((_, i) => Boolean(arr[i]));
-      }
-      return base;
-    }
+function renderHome(){
+  const state=getState();
+  const grid=document.getElementById("metersGrid");
+  grid.innerHTML="";
 
-    function saveState(state){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
+  for(let subj in SUBJECTS){
+    const {done,total,pct}=calc(subj,state);
+    const id=subj.replace(/\s/g,"");
 
-    function statsFor(state, subj){
-      const arr = state[subj] || [];
-      const done = arr.filter(Boolean).length;
-      const total = arr.length;
-      const pct = total === 0 ? 0 : Math.round((done/total)*100);
-      return { done, total, pct };
-    }
+    const card=document.createElement("div");
+    card.className="meterCard";
+    card.innerHTML=`
+      <div class="ring">
+        <div class="pct">${pct}%</div>
+        <svg width="120" height="120">
+          <circle cx="60" cy="60" r="45" stroke="#1f2937" stroke-width="10" fill="none"/>
+          <circle cx="60" cy="60" r="45"
+            stroke="var(--green)" stroke-width="10"
+            fill="none"
+            stroke-dasharray="282.74"
+            stroke-dashoffset="${282.74-(pct/100*282.74)}"
+          />
+        </svg>
+      </div>
+      <div class="subjectName" onclick="openSubject('${subj}')">${subj}</div>
+      <div class="doneText">${done}/${total} done</div>
+    `;
+    grid.appendChild(card);
+  }
+}
 
-    function overallStats(state){
-      let done = 0, total = 0;
-      for(const subj of Object.keys(SUBJECTS)){
-        const s = statsFor(state, subj);
-        done += s.done;
-        total += s.total;
-      }
-      const pct = total === 0 ? 0 : Math.round((done/total)*100);
-      return { done, total, pct };
-    }
+function openSubject(subj){
+  document.getElementById("homeScreen").classList.add("hidden");
+  document.getElementById("subjectScreen").classList.remove("hidden");
+  document.getElementById("subjectTitle").innerText=subj;
 
-    // circumference for r=45 => 2*pi*45 = 282.74
-    function setRing(arcEl, pctEl, pct){
-      const C = 282.74;
-      const offset = C - (pct/100)*C;
-      arcEl.style.strokeDashoffset = String(offset);
-      pctEl.textContent = `${pct}%`;
-    }
+  const state=getState();
+  const wrap=document.getElementById("topics");
+  wrap.innerHTML="";
 
-    function cssId(name){
-      return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
-    }
-
-    // ----------------------------
-    // NAV
-    // ----------------------------
-    let currentSubject = null;
-
-    function showHome(){
-      $("subjectScreen").classList.add("hidden");
-      $("homeScreen").classList.remove("hidden");
-      currentSubject = null;
+  SUBJECTS[subj].forEach((topic,i)=>{
+    const row=document.createElement("div");
+    row.className="topicRow";
+    row.innerHTML=`
+      <div class="topicName">${topic}</div>
+      <input type="checkbox" ${state[subj][i]?"checked":""}>
+    `;
+    const cb=row.querySelector("input");
+    cb.addEventListener("change",()=>{
+      state[subj][i]=cb.checked;
+      saveState(state);
       renderHome();
-    }
-
-    function openSubject(subj){
-      currentSubject = subj;
-      $("homeScreen").classList.add("hidden");
-      $("subjectScreen").classList.remove("hidden");
-      renderSubject();
-    }
-
-    // ----------------------------
-    // RENDER HOME
-    // ----------------------------
-    function renderHome(){
-      const state = loadState();
-      const overall = overallStats(state);
-      $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
-
-      const grid = $("metersGrid");
-      grid.innerHTML = "";
-
-      for(const subj of Object.keys(SUBJECTS)){
-        const {done, total, pct} = statsFor(state, subj);
-        const id = cssId(subj);
-
-        const card = document.createElement("div");
-        card.className = "meterCard";
-
-        card.innerHTML = `
-          <div class="ring" aria-label="${subj} progress">
-            <div class="pct" id="pct_${id}">${pct}%</div>
-            <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
-              <circle cx="60" cy="60" r="45" fill="none"
-                stroke="rgba(255,255,255,.22)" stroke-width="10"></circle>
-              <circle id="arc_${id}" cx="60" cy="60" r="45" fill="none"
-                stroke="var(--green)" stroke-width="10"
-                stroke-linecap="round"
-                stroke-dasharray="282.74"
-                stroke-dashoffset="282.74"
-                transform="rotate(-90 60 60)"></circle>
-            </svg>
-          </div>
-
-          <div class="subjectName" data-subject="${subj}">${subj}</div>
-          <div class="doneText">${done}/${total} done</div>
-        `;
-
-        grid.appendChild(card);
-
-        const arc = card.querySelector(`#arc_${id}`);
-        const pctEl = card.querySelector(`#pct_${id}`);
-        setRing(arc, pctEl, pct);
-
-        // Clicking subject name opens the subject screen
-        const nameEl = card.querySelector(".subjectName");
-        nameEl.addEventListener("click", () => openSubject(subj));
-      }
-    }
-
-    // ----------------------------
-    // RENDER SUBJECT
-    // ----------------------------
-    function renderSubject(){
-      const state = loadState();
-      const subj = currentSubject;
-
-      $("subjectTitle").textContent = subj;
-
-      const {done,total,pct} = statsFor(state, subj);
-      $("subjectRight").textContent = `${done}/${total} done • ${pct}%`;
-      $("subjectMini").textContent = "Tick topics → progress updates";
-
-      const wrap = $("topics");
-      wrap.innerHTML = "";
-
-      SUBJECTS[subj].forEach((topic, idx) => {
-        const row = document.createElement("div");
-        row.className = "topicRow";
-
-        const cbId = `cb_${idx}`;
-
-        row.innerHTML = `
-          <div class="topicName">${topic}</div>
-          <input type="checkbox" id="${cbId}" />
-        `;
-
-        const cb = row.querySelector(`#${cbId}`);
-        cb.checked = Boolean(state[subj][idx]);
-
-        cb.addEventListener("change", () => {
-          const newState = loadState();
-          newState[subj][idx] = cb.checked;
-          saveState(newState);
-
-          const s = statsFor(newState, subj);
-          $("subjectRight").textContent = `${s.done}/${s.total} done • ${s.pct}%`;
-
-          const overall = overallStats(newState);
-          $("overallText").textContent = `Overall: ${overall.pct}% (${overall.done}/${overall.total})`;
-        });
-
-        wrap.appendChild(row);
-      });
-    }
-
-    // ----------------------------
-    // ACTION BUTTONS
-    // ----------------------------
-    $("backBtn").addEventListener("click", showHome);
-
-    $("markAll").addEventListener("click", () => {
-      if(!currentSubject) return;
-      const state = loadState();
-      state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
-      saveState(state);
-      renderSubject();
     });
+    wrap.appendChild(row);
+  });
+}
 
-    $("clearAll").addEventListener("click", () => {
-      if(!currentSubject) return;
-      const state = loadState();
-      state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
-      saveState(state);
-      renderSubject();
-    });
+function showHome(){
+  document.getElementById("subjectScreen").classList.add("hidden");
+  document.getElementById("homeScreen").classList.remove("hidden");
+  renderHome();
+}
 
-    $("resetAll").addEventListener("click", () => {
-      localStorage.removeItem(STORAGE_KEY);
-      if(currentSubject) renderSubject();
-      else renderHome();
-    });
+renderHome();
+</script>
 
-    // ----------------------------
-    // INIT
-    // ----------------------------
-    renderHome();
-  </script>
 </body>
 </html>
-
-
