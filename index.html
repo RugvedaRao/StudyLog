@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Study Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+    }
+
+    .header {
+      background: linear-gradient(90deg, #14b8a6, #3b82f6);
+      padding: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .progress-circle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: conic-gradient(#ffffff 0% 40%, rgba(255,255,255,0.2) 40% 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 16px;
+      color: black;
+      background-color: white;
+    }
+
+    .container {
+      padding: 20px;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+    }
+
+    .countdown {
+      display: flex;
+      gap: 20px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .quote {
+      text-align: center;
+      font-style: italic;
+      font-size: 16px;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 15px;
+    }
+
+    .btn {
+      background: #334155;
+      padding: 15px;
+      border-radius: 10px;
+      text-align: center;
+      flex: 1;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background: #475569;
+    }
+
+    input {
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      margin-top: 10px;
+    }
+
+    button {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #14b8a6;
+      color: black;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>Study Dashboard</h1>
+    <div class="progress-circle" id="progressCircle">40%</div>
+  </div>
+
+  <div class="container">
+
+    <div class="card">
+      <h3>Countdown to Exam</h3>
+      <div class="countdown">
+        <div><span id="days">0</span> Days</div>
+        <div><span id="hours">0</span> Hours</div>
+        <div><span id="minutes">0</span> Minutes</div>
+        <div><span id="seconds">0</span> Seconds</div>
+      </div>
+
+      <div>
+        <input type="date" id="examDate">
+        <button onclick="setExamDate()">Set Date</button>
+      </div>
+    </div>
+
+    <div class="card quote">
+      <p id="quoteText">"Success is the sum of small efforts repeated daily."</p>
+    </div>
+
+    <div class="card">
+      <h3>Quick Access</h3>
+      <div class="buttons">
+        <div class="btn">My Classes</div>
+        <div class="btn">Notes</div>
+        <div class="btn">Important Docs</div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  let examDate = localStorage.getItem("examDate");
+
+  if (examDate) {
+    startCountdown(new Date(examDate));
+  }
+
+  function setExamDate() {
+    const dateInput = document.getElementById("examDate").value;
+    if (!dateInput) return;
+    localStorage.setItem("examDate", dateInput);
+    startCountdown(new Date(dateInput));
+  }
+
+  function startCountdown(targetDate) {
+    setInterval(() => {
+      const now = new Date();
+      const diff = targetDate - now;
+
+      if (diff <= 0) return;
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((diff / (1000 * 60)) % 60);
+      const seconds = Math.floor((diff / 1000) % 60);
+
+      document.getElementById("days").innerText = days;
+      document.getElementById("hours").innerText = hours;
+      document.getElementById("minutes").innerText = minutes;
+      document.getElementById("seconds").innerText = seconds;
+    }, 1000);
+  }
+</script>
+
+</body>
+</html>
