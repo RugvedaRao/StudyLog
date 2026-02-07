@@ -457,7 +457,7 @@ function renderTimer(){
 
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
-  timerBig.textContent = `${pad2(m)}:${pad2(s)}`;
+  timerBig.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
 
 function setButtonsState(){
@@ -582,13 +582,13 @@ function resetTimer(){
 // ✅ To-Do List Logic
 // ----------------------------
 function loadTodos(){
-  const raw = localStorage.getItem(TODO_KEY);
+  const raw = localStorage.getItem("ca_todo_list_v1");
   try { return raw ? JSON.parse(raw) : []; }
   catch { return []; }
 }
 
 function saveTodos(todos){
-  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+  localStorage.setItem("ca_todo_list_v1", JSON.stringify(todos));
 }
 
 function renderTodos(){
@@ -652,7 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
 
-  // ✅ Done button -> Home (works with floating button too)
+  // ✅ Done button -> Home (inline right)
   document.getElementById("doneBtn")?.addEventListener("click", showHome);
 
   // Quote + UI
@@ -717,5 +717,3 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTimer();
   setButtonsState();
 });
-
-
