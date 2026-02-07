@@ -395,22 +395,19 @@ let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
 
-// ============================
-// ✅ Alarm Loop + Popup Control
-// (requires alarmOverlay + alarmOkBtn in index.html)
-// ============================
+// Alarm Loop + Popup Control
 let alarmInterval = null;
 let alarmCtx = null;
 
 function startAlarmLoop(){
-  stopAlarmLoop(); // prevent stacking
+  stopAlarmLoop();
 
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   alarmCtx = new AudioCtx();
   alarmCtx.resume?.();
 
-  const beepDuration = 0.08; // beep length
-  const gap = 0.10;          // ✅ 0.1s gap
+  const beepDuration = 0.08;
+  const gap = 0.10;
   const beepsPerCycle = 4;
 
   function playPattern(){
@@ -465,15 +462,11 @@ function hideAlarmPopup(){
   if(overlay) overlay.classList.add("hidden");
 }
 
-// bind OK button (if present)
 const alarmOkBtn = document.getElementById("alarmOkBtn");
 if(alarmOkBtn){
   alarmOkBtn.addEventListener("click", hideAlarmPopup);
 }
 
-// ----------------------------
-// Timer UI
-// ----------------------------
 function renderTimer(){
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
@@ -539,7 +532,6 @@ function startTimer(){
       timerInputs.style.pointerEvents = "auto";
       setButtonsState();
 
-      // ✅ show popup + loop beeps until OK
       showAlarmPopup();
 
       timerHint.textContent = "Time finished. Set again or restart.";
@@ -585,17 +577,19 @@ startTimerBtn.addEventListener("click", startTimer);
 pauseTimerBtn.addEventListener("click", pauseTimer);
 resetTimerBtn.addEventListener("click", resetTimer);
 
-// initial state
 renderTimer();
 setButtonsState();
+
+
 // ============================
-// To-Do List Logic
+// ✅ To-Do List Logic
 // ============================
 const TODO_KEY = "ca_todo_list_v1";
 
 function loadTodos(){
   const raw = localStorage.getItem(TODO_KEY);
-  return raw ? JSON.parse(raw) : [];
+  try { return raw ? JSON.parse(raw) : []; }
+  catch { return []; }
 }
 
 function saveTodos(todos){
@@ -615,7 +609,7 @@ function renderTodos(){
 
     row.innerHTML = `
       <span>${task}</span>
-      <button data-index="${index}">✕</button>
+      <button type="button" aria-label="Delete task">✕</button>
     `;
 
     row.querySelector("button").addEventListener("click", () => {
@@ -642,6 +636,16 @@ if(addTodoBtn){
 
     input.value = "";
     renderTodos();
+  });
+}
+
+// Enter key adds task
+const todoInput = document.getElementById("todoInput");
+if(todoInput){
+  todoInput.addEventListener("keydown", (e) => {
+    if(e.key === "Enter"){
+      document.getElementById("addTodoBtn")?.click();
+    }
   });
 }
 
