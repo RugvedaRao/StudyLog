@@ -650,7 +650,9 @@ function bindTodo(){
 document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
-
+#doneBtn{
+  background: linear-gradient(90deg, var(--accent), var(--green));
+}
   // Quote + UI
   loadDailyQuote();
   renderHome();
