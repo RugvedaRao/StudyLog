@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
-  <!-- IMPORTANT: your repo has style.css -->
+
+  <!-- IMPORTANT: file must be named style.css and in same folder -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -12,12 +13,10 @@
   <div class="app">
     <header class="hero">
       <div class="hero-inner">
-        <!-- Title back -->
         <div class="brand">
           <h1>CA Foundation Tracker</h1>
         </div>
 
-        <!-- Ribbon actions: Set Timer + Exam Countdown -->
         <div class="hero-actions">
           <button class="ribbonTimerBtn" id="openTimerBtn" type="button">Set Timer</button>
 
@@ -29,7 +28,6 @@
     </header>
 
     <main class="content">
-      <!-- Quote of the Day -->
       <div class="quoteCard">
         <div class="quoteText" id="quoteText">Loading quote...</div>
       </div>
@@ -47,7 +45,6 @@
             Overall: 0% <span>(0/0)</span>
           </div>
 
-          <!-- Bottom row: empty left + Quick Links right -->
           <div class="bottomRow">
             <div class="bottomLeft"></div>
 
@@ -86,14 +83,14 @@
           <div class="topics" id="topics"></div>
 
           <div class="actions">
-            <button class="secondary" id="markAll">Mark All</button>
-            <button class="secondary" id="clearAll">Clear All</button>
-            <button id="resetAll">Reset ALL</button>
+            <button class="secondary" id="markAll" type="button">Mark All</button>
+            <button class="secondary" id="clearAll" type="button">Clear All</button>
+            <button id="resetAll" type="button">Reset ALL</button>
           </div>
         </div>
       </section>
 
-      <!-- Study Timer Modal (kept outside cards) -->
+      <!-- Study Timer Modal -->
       <div class="timerModal hidden" id="timerModal">
         <div class="timerPanel">
           <div class="timerTop">
@@ -129,7 +126,9 @@
     </main>
   </div>
 
+  <!-- IMPORTANT: file must be named app.js and in same folder -->
   <script src="./app.js"></script>
 </body>
 </html>
+
 
