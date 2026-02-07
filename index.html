@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
 
-  <!-- IMPORTANT: file must be named style.css and in same folder -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -18,7 +17,9 @@
         </div>
 
         <div class="hero-actions">
-          <button class="ribbonTimerBtn" id="openTimerBtn" type="button">Set Timer</button>
+          <button class="ribbonTimerBtn" id="openTimerBtn" type="button">
+            Set Timer
+          </button>
 
           <div class="countdownPill" id="countdownPill" title="Click to set/change exam date">
             <div class="time" id="countdownTime">SET EXAM DATE</div>
@@ -28,6 +29,8 @@
     </header>
 
     <main class="content">
+
+      <!-- Quote -->
       <div class="quoteCard">
         <div class="quoteText" id="quoteText">Loading quote...</div>
       </div>
@@ -51,15 +54,15 @@
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
-              <a class="quickLink" href="https://www.icai.org/post/foundation-nset" target="_blank" rel="noopener noreferrer">
+              <a class="quickLink" href="https://www.icai.org/post/foundation-nset" target="_blank">
                 ICAI Study Material
               </a>
 
-              <a class="quickLink" href="https://www.icai.org/post/rtp-foundation-course" target="_blank" rel="noopener noreferrer">
+              <a class="quickLink" href="https://www.icai.org/post/rtp-foundation-course" target="_blank">
                 RTP
               </a>
 
-              <a class="quickLink" href="https://resource.cdn.icai.org/84774bos68243.pdf" target="_blank" rel="noopener noreferrer">
+              <a class="quickLink" href="https://resource.cdn.icai.org/84774bos68243.pdf" target="_blank">
                 MTP
               </a>
             </div>
@@ -90,7 +93,7 @@
         </div>
       </section>
 
-      <!-- Study Timer Modal -->
+      <!-- TIMER MODAL -->
       <div class="timerModal hidden" id="timerModal">
         <div class="timerPanel">
           <div class="timerTop">
@@ -100,7 +103,7 @@
 
           <div class="timerBig" id="timerBig">00:00</div>
 
-          <div class="timerSetup" id="timerSetup">
+          <div class="timerSetup">
             <div class="timerInputs" id="timerInputs">
               <div class="timerField">
                 <label for="timerMin">Minutes</label>
@@ -118,7 +121,9 @@
               <button class="timerBtn secondary" id="resetTimerBtn" type="button" disabled>Reset</button>
             </div>
 
-            <div class="timerHint" id="timerHint">Set time and press Start.</div>
+            <div class="timerHint" id="timerHint">
+              Set time and press Start.
+            </div>
           </div>
         </div>
       </div>
@@ -126,9 +131,17 @@
     </main>
   </div>
 
-  <!-- IMPORTANT: file must be named app.js and in same folder -->
-  <script src="./app.js"></script>
+  <!-- ✅ ALARM POPUP (stops alarm when OK pressed) -->
+  <div class="alarmOverlay hidden" id="alarmOverlay">
+    <div class="alarmBox">
+      <div class="alarmTitle">⏰ Time’s up!</div>
+      <div class="alarmMsg">Press OK to stop the alarm.</div>
+      <button class="alarmOk" id="alarmOkBtn" type="button">OK</button>
+    </div>
+  </div>
+
+  <!-- IMPORTANT: cache-busted JS so latest version loads -->
+  <script src="./app.js?v=9"></script>
+
 </body>
 </html>
-
-
