@@ -588,3 +588,62 @@ resetTimerBtn.addEventListener("click", resetTimer);
 // initial state
 renderTimer();
 setButtonsState();
+// ============================
+// To-Do List Logic
+// ============================
+const TODO_KEY = "ca_todo_list_v1";
+
+function loadTodos(){
+  const raw = localStorage.getItem(TODO_KEY);
+  return raw ? JSON.parse(raw) : [];
+}
+
+function saveTodos(todos){
+  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
+}
+
+function renderTodos(){
+  const listEl = document.getElementById("todoList");
+  if(!listEl) return;
+
+  const todos = loadTodos();
+  listEl.innerHTML = "";
+
+  todos.forEach((task, index) => {
+    const row = document.createElement("div");
+    row.className = "todoItem";
+
+    row.innerHTML = `
+      <span>${task}</span>
+      <button data-index="${index}">✕</button>
+    `;
+
+    row.querySelector("button").addEventListener("click", () => {
+      const updated = loadTodos();
+      updated.splice(index, 1);
+      saveTodos(updated);
+      renderTodos();
+    });
+
+    listEl.appendChild(row);
+  });
+}
+
+const addTodoBtn = document.getElementById("addTodoBtn");
+if(addTodoBtn){
+  addTodoBtn.addEventListener("click", () => {
+    const input = document.getElementById("todoInput");
+    const value = input.value.trim();
+    if(!value) return;
+
+    const todos = loadTodos();
+    todos.push(value);
+    saveTodos(todos);
+
+    input.value = "";
+    renderTodos();
+  });
+}
+
+// init
+renderTodos();
