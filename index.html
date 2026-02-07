@@ -41,25 +41,20 @@
           <div class="titleRow">
             <div class="title">Progress</div>
 
-            <!-- ✅ Theme Toggle (extreme right) -->
             <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">
               <span class="themeIcon" id="themeIcon">🌙</span>
               <span class="themeText" id="themeText">Dark</span>
             </button>
           </div>
 
-          <!-- Progress Rings -->
           <div class="metersGrid" id="metersGrid"></div>
 
-          <!-- Overall (ONLY ONCE) -->
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
 
-          <!-- ✅ Extras grid aligned to 4 columns -->
           <div class="extrasGrid">
 
-            <!-- ✅ To-Do: spans col 1-2 (till Business Laws) -->
             <div class="todoCard" id="todoCard">
               <div class="todoHeader">
                 <div class="todoTitle">To-Do List</div>
@@ -73,10 +68,8 @@
               <div class="todoList" id="todoList"></div>
             </div>
 
-            <!-- ✅ Spacer for column 3 (below Quantitative Aptitude) -->
             <div class="extrasSpacer" aria-hidden="true"></div>
 
-            <!-- ✅ Quick Links: col 4 (below Business Economics) -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -112,17 +105,18 @@
 
           <div class="topics" id="topics"></div>
 
-       <div class="actions">
-  <button class="secondary" id="markAll" type="button">Mark All</button>
-  <button class="secondary" id="clearAll" type="button">Clear All</button>
-
-  <!-- pushes Done to far right -->
-  <div class="actionsSpacer"></div>
-
-  <button class="secondary" id="resetAll" type="button">Reset ALL</button>
-  <button id="doneBtn" type="button">Done</button>
-</div>
+          <div class="actions">
+            <button class="secondary" id="markAll" type="button">Mark All</button>
+            <button class="secondary" id="clearAll" type="button">Clear All</button>
+            <button class="secondary" id="resetAll" type="button">Reset ALL</button>
+          </div>
         </div>
+
+        <!-- ✅ DONE BUTTON ADDED (Bottom Right Corner) -->
+        <button id="doneBtn" class="floatingDoneBtn" type="button">
+          Done
+        </button>
+
       </section>
 
       <!-- TIMER MODAL -->
@@ -163,7 +157,7 @@
     </main>
   </div>
 
-  <!-- ✅ ALARM POPUP -->
+  <!-- ALARM POPUP -->
   <div class="alarmOverlay hidden" id="alarmOverlay">
     <div class="alarmBox">
       <div class="alarmTitle">⏰ Time’s up!</div>
