@@ -285,8 +285,7 @@ function renderHome(){
     const pctEl = card.querySelector(`#pct_${id}`);
     setRing(arc, pctEl, pct);
 
-    const nameEl = card.querySelector(".subjectName");
-    nameEl.addEventListener("click", () => openSubject(subj));
+    card.querySelector(".subjectName").addEventListener("click", () => openSubject(subj));
   }
 }
 
@@ -307,13 +306,12 @@ function renderSubject(){
     const row = document.createElement("div");
     row.className = "topicRow";
 
-    const cbId = `cb_${idx}`;
     row.innerHTML = `
       <div class="topicName">${topic}</div>
-      <input type="checkbox" id="${cbId}" />
+      <input type="checkbox" id="cb_${idx}" />
     `;
 
-    const cb = row.querySelector(`#${cbId}`);
+    const cb = row.querySelector(`#cb_${idx}`);
     cb.checked = Boolean(state[subj][idx]);
 
     cb.addEventListener("change", () => {
@@ -324,7 +322,6 @@ function renderSubject(){
       const s = statsFor(newState, subj);
       $("subjectRight").textContent = `${s.done}/${s.total} done • ${s.pct}%`;
 
-      // update overall number (home screen)
       const overall = overallStats(newState);
       $("overallBelow").innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
     });
@@ -365,13 +362,17 @@ $("resetAll").addEventListener("click", () => {
 $("countdownPill").addEventListener("click", promptSetExamDate);
 
 // ----------------------------
-// Init
+// Init (Home)
 // ----------------------------
 loadDailyQuote();
 renderHome();
 updateCountdownDisplay();
 showHome();
+
+
+// ============================
 // ===== Study Timer =====
+// ============================
 const openTimerBtn = document.getElementById("openTimerBtn");
 const closeTimerBtn = document.getElementById("closeTimerBtn");
 const timerModal = document.getElementById("timerModal");
@@ -390,7 +391,6 @@ let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
 
-// simple beep (no external file)
 function playAlarm(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -403,17 +403,13 @@ function playAlarm(){
     g.gain.value = 0.12;
     o.start();
 
-    // quick beep pattern
     setTimeout(()=>{ o.frequency.value = 660; }, 180);
     setTimeout(()=>{ o.frequency.value = 990; }, 360);
     setTimeout(()=>{ o.stop(); ctx.close(); }, 700);
   }catch(e){
-    // fallback
     alert("Time up!");
   }
 }
-
-function pad2(n){ return String(n).padStart(2,"0"); }
 
 function renderTimer(){
   const m = Math.floor(remainingSeconds / 60);
@@ -439,7 +435,6 @@ function closeTimer(){
 openTimerBtn.addEventListener("click", openTimer);
 closeTimerBtn.addEventListener("click", closeTimer);
 
-// close on backdrop click
 timerModal.addEventListener("click", (e)=>{
   if(e.target === timerModal) closeTimer();
 });
@@ -448,7 +443,6 @@ function startTimer(){
   const m = Math.max(0, Number(timerMin.value || 0));
   const s = Math.min(59, Math.max(0, Number(timerSec.value || 0)));
 
-  // if starting fresh, take input values
   if(!running && remainingSeconds === 0){
     remainingSeconds = (m * 60) + s;
   }
@@ -469,9 +463,11 @@ function startTimer(){
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(()=>{
     remainingSeconds -= 1;
+
     if(remainingSeconds <= 0){
       remainingSeconds = 0;
       renderTimer();
+
       clearInterval(timerInterval);
       timerInterval = null;
       running = false;
@@ -485,6 +481,7 @@ function startTimer(){
       timerHint.textContent = "Time finished. Set again or restart.";
       return;
     }
+
     renderTimer();
   }, 1000);
 }
@@ -492,10 +489,12 @@ function startTimer(){
 function pauseTimer(){
   if(!running) return;
   running = false;
+
   if(timerInterval){
     clearInterval(timerInterval);
     timerInterval = null;
   }
+
   timerInputs.style.opacity = "1";
   timerInputs.style.pointerEvents = "auto";
   timerHint.textContent = "Paused. Press Start to continue.";
@@ -504,10 +503,12 @@ function pauseTimer(){
 
 function resetTimer(){
   running = false;
+
   if(timerInterval){
     clearInterval(timerInterval);
     timerInterval = null;
   }
+
   remainingSeconds = 0;
   timerInputs.style.opacity = "1";
   timerInputs.style.pointerEvents = "auto";
