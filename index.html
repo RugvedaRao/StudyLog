@@ -42,35 +42,35 @@
             <div class="title">Progress</div>
           </div>
 
+          <!-- Progress Rings -->
           <div class="metersGrid" id="metersGrid"></div>
 
+          <!-- Overall (ONLY ONCE) -->
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
-<div class="metersGrid" id="metersGrid"></div>
 
-<div class="overallBelow" id="overallBelow">
-  Overall: 0% <span>(0/0)</span>
-</div>
+          <!-- ✅ Extras grid aligned to 4 columns -->
+          <div class="extrasGrid">
 
-<!-- ✅ ADD TO-DO LIST HERE -->
-<div class="todoCard" id="todoCard">
-  <div class="todoHeader">
-    <div class="todoTitle">To-Do List</div>
-  </div>
+            <!-- ✅ To-Do: spans col 1-2 (till Business Laws) -->
+            <div class="todoCard" id="todoCard">
+              <div class="todoHeader">
+                <div class="todoTitle">To-Do List</div>
+              </div>
 
-  <div class="todoInputRow">
-    <input type="text" id="todoInput" placeholder="Add a task..." />
-    <button id="addTodoBtn" type="button">Add</button>
-  </div>
+              <div class="todoInputRow">
+                <input type="text" id="todoInput" placeholder="Add a task..." />
+                <button id="addTodoBtn" type="button">Add</button>
+              </div>
 
-  <div class="todoList" id="todoList"></div>
-</div>
+              <div class="todoList" id="todoList"></div>
+            </div>
 
-<div class="bottomRow">
-          <div class="bottomRow">
-            <div class="bottomLeft"></div>
+            <!-- ✅ Spacer for column 3 (below Quantitative Aptitude) -->
+            <div class="extrasSpacer" aria-hidden="true"></div>
 
+            <!-- ✅ Quick Links: col 4 (below Business Economics) -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -86,6 +86,7 @@
                 MTP
               </a>
             </div>
+
           </div>
         </div>
       </section>
@@ -151,7 +152,7 @@
     </main>
   </div>
 
-  <!-- ✅ ALARM POPUP (stops alarm when OK pressed) -->
+  <!-- ✅ ALARM POPUP -->
   <div class="alarmOverlay hidden" id="alarmOverlay">
     <div class="alarmBox">
       <div class="alarmTitle">⏰ Time’s up!</div>
@@ -160,8 +161,6 @@
     </div>
   </div>
 
-  <!-- IMPORTANT: cache-busted JS so latest version loads -->
-  <script src="./app.js?v=9"></script>
-
+  <script src="./app.js?v=10"></script>
 </body>
 </html>
