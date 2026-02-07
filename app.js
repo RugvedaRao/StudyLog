@@ -89,6 +89,38 @@ const EXAM_DATE_KEY = "ca_exam_date_v3";
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
 
+// ============================
+// ✅ Theme Toggle (Dark/Light)
+// ============================
+const THEME_KEY = "ca_theme_v1";
+
+function applyTheme(theme){
+  // theme: "dark" | "light"
+  document.body.setAttribute("data-theme", theme);
+
+  const icon = document.getElementById("themeIcon");
+  const text = document.getElementById("themeText");
+
+  if(icon) icon.textContent = theme === "light" ? "☀️" : "🌙";
+  if(text) text.textContent = theme === "light" ? "Light" : "Dark";
+
+  localStorage.setItem(THEME_KEY, theme);
+}
+
+function initTheme(){
+  const saved = localStorage.getItem(THEME_KEY);
+  const theme = (saved === "light" || saved === "dark") ? saved : "dark";
+  applyTheme(theme);
+
+  const btn = document.getElementById("themeToggle");
+  if(btn){
+    btn.addEventListener("click", () => {
+      const current = document.body.getAttribute("data-theme") || "dark";
+      applyTheme(current === "dark" ? "light" : "dark");
+    });
+  }
+}
+
 // ----------------------------
 // Progress state (localStorage)
 // ----------------------------
@@ -368,6 +400,7 @@ $("countdownPill").addEventListener("click", promptSetExamDate);
 // ----------------------------
 // Init (Home)
 // ----------------------------
+initTheme();              // ✅ added
 loadDailyQuote();
 renderHome();
 updateCountdownDisplay();
