@@ -1,5 +1,6 @@
 // ============================
 // CA Foundation Tracker - app.js
+// (FULL - with Theme Toggle + Done button + Timer + ToDo)
 // ============================
 
 // ----------------------------
@@ -650,9 +651,10 @@ function bindTodo(){
 document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
-#doneBtn{
-  background: linear-gradient(90deg, var(--accent), var(--green));
-}
+
+  // ✅ Done button -> Home
+  document.getElementById("doneBtn")?.addEventListener("click", showHome);
+
   // Quote + UI
   loadDailyQuote();
   renderHome();
@@ -715,3 +717,4 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTimer();
   setButtonsState();
 });
+
