@@ -477,12 +477,7 @@ body[data-theme="light"] .back{
   cursor:pointer;
 }
 
-.actions{
-  display:flex;
-  gap:10px;
-  margin-top:14px;
-  flex-wrap:wrap;
-}
+/* ✅ Actions row (Done pushed to right) */
 .actions{
   display:flex;
   gap:10px;
@@ -492,9 +487,10 @@ body[data-theme="light"] .back{
 }
 
 .actionsSpacer{
-  flex: 1 1 auto;   /* ✅ takes remaining space */
+  flex: 1 1 auto;
 }
 
+/* Buttons */
 button{
   border:none;
   border-radius: 10px;
@@ -713,35 +709,4 @@ body[data-theme="light"] .alarmMsg{
 
   .ring{ width:128px; height:128px; }
   .ring .pct{ font-size:24px; }
-}
-/* ✅ Floating Done Button (Bottom Right) */
-.floatingDoneBtn{
-  position: fixed;
-  bottom: 25px;
-  right: 25px;
-
-  z-index: 10000;
-
-  padding: 12px 18px;
-  border-radius: 12px;
-
-  border: 1px solid rgba(255,255,255,.14);
-  backdrop-filter: blur(8px);
-
-  font-weight: 900;
-  font-size: 14px;
-
-  color: #061223;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  cursor: pointer;
-
-  box-shadow: 0 10px 25px rgba(0,0,0,.25);
-}
-
-.floatingDoneBtn:hover{
-  filter: brightness(1.05);
-}
-
-.floatingDoneBtn:active{
-  transform: translateY(1px);
 }
