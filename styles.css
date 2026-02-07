@@ -1,1114 +1,581 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Study Dashboard</title>
-  <style>
-    :root{
-      --bg:#0b1020;
-      --text:#e8eefc;
-      --muted:#a8b7d8;
-      --border: 1px solid rgba(255,255,255,.10);
-      --shadow: 0 18px 40px rgba(0,0,0,.35);
-      --radius:18px;
-      --green:#22c55e;
-      --accent:#38bdf8;
-    }
-    *{ box-sizing:border-box; }
-
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:
-        radial-gradient(1200px 800px at 15% 15%, rgba(34,197,94,.10), transparent 55%),
-        radial-gradient(900px 600px at 85% 25%, rgba(56,189,248,.10), transparent 55%),
-        var(--bg);
-      color:var(--text);
-      min-height:100vh;
-      display:flex;
-      justify-content:center;
-      padding:26px 16px;
-    }
-
-    .app{
-      width:min(1100px, 100%);
-      border-radius: 26px;
-      overflow:hidden;
-      border: var(--border);
-      box-shadow: var(--shadow);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
-    }
-
-    /* Header ribbon */
-    .hero{
-      padding:22px 22px 18px;
-      background: linear-gradient(90deg, rgba(34,197,94,.45), rgba(56,189,248,.45));
-      position:relative;
-    }
-    .hero:after{
-      content:"";
-      position:absolute;
-      inset:0;
-      background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.45));
-      pointer-events:none;
-    }
-    .hero-inner{
-      position:relative;
-      z-index:1;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-    }
-    .brand h1{
-      margin:0;
-      font-size:24px;
-      font-weight:900;
-      letter-spacing:.2px;
-    }
-    .brand .sub{
-      margin-top:4px;
-      color:rgba(255,255,255,.85);
-      font-weight:800;
-      font-size:12px;
-    }
-
-    /* Ribbon actions */
-    .hero-actions{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .ribbonTimerBtn{
-      border:none;
-      border-radius:999px;
-      padding:10px 14px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.22);
-      border: 1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(8px);
-    }
-    .ribbonTimerBtn:hover{ background: rgba(255,255,255,.10); }
-
-    /* Countdown pill */
-    .countdownPill{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:10px 14px;
-      border-radius: 999px;
-      background: rgba(0,0,0,.22);
-      border: 1px solid rgba(255,255,255,.18);
-      backdrop-filter: blur(8px);
-      user-select:none;
-      cursor:pointer;
-    }
-    .countdownPill .label{
-      font-weight:900;
-      font-size:12px;
-      color: rgba(255,255,255,.85);
-    }
-    .countdownPill .time{
-      font-weight:900;
-      font-size:14px;
-      color: rgba(255,255,255,.96);
-      white-space:nowrap;
-      padding:2px 6px;
-      border-radius: 10px;
-    }
-    .countdownPill:hover .time{ background: rgba(255,255,255,.08); }
-
-    .content{ padding:20px 22px 28px; }
-
-    /* Quote Card */
-    .quoteCard{
-      margin-bottom:18px;
-      padding:18px;
-      border-radius:18px;
-      background: linear-gradient(90deg, rgba(34,197,94,.15), rgba(56,189,248,.15));
-      border: 1px solid rgba(255,255,255,.12);
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-      text-align:center;
-    }
-    .quoteText{
-      font-size:16px;
-      font-weight:800;
-      line-height:1.5;
-      color: rgba(255,255,255,.95);
-    }
-
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
-      border: var(--border);
-      border-radius: var(--radius);
-      padding:18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,.25);
-    }
-
-    .titleRow{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:14px;
-      gap:12px;
-    }
-    .titleRow .title{
-      font-weight:900;
-      font-size:18px;
-    }
-    .titleRow .hint{
-      color:rgba(255,255,255,.8);
-      font-weight:800;
-      font-size:12px;
-    }
-
-    .metersGrid{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:14px;
-    }
-
-    .meterCard{
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-      border-radius: 18px;
-      padding:14px 12px 12px;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      min-height:210px;
-    }
-
-    .ring{
-      width:120px;
-      height:120px;
-      border-radius:999px;
-      display:grid;
-      place-items:center;
-      position:relative;
-      background: rgba(0,0,0,.16);
-      border: 1px solid rgba(255,255,255,.14);
-    }
-    .ring .pct{
-      position:absolute;
-      font-weight:900;
-      font-size:22px;
-      color: rgba(255,255,255,.95);
-    }
-    .ring svg{ display:block; }
-
-    .subjectName{
-      font-weight:900;
-      font-size:15px;
-      color: rgba(255,255,255,.95);
-      cursor:pointer;
-      user-select:none;
-      text-align:center;
-      line-height:1.2;
-    }
-    .subjectName:hover{ text-decoration: underline; }
-
-    .doneText{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-    }
-
-    .overallBelow{
-      margin-top:14px;
-      text-align:right;
-      font-weight:900;
-      font-size:14px;
-      color: rgba(255,255,255,.88);
-    }
-    .overallBelow span{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-    }
-
-    /* Bottom row: Quick Links same width as a subject card */
-    .bottomRow{
-      margin-top:18px;
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:14px;
-      align-items:stretch;
-    }
-    .bottomLeft{
-      grid-column: 1 / span 3;
-      border:none;
-      background:transparent;
-      padding:0;
-      box-shadow:none;
-    }
-
-    .quickLinksCard{
-      grid-column: 4;
-      width:100%;
-      min-height:210px;
-      padding:14px 12px 12px;
-      border-radius:18px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-      box-shadow:none;
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .quickTitle{
-      font-weight:900;
-      font-size:16px;
-      margin-bottom:8px;
-      color: rgba(255,255,255,.95);
-    }
-    .quickLink{
-      text-decoration:none;
-      font-weight:900;
-      font-size:14px;
-      color: var(--accent);
-      padding:10px 12px;
-      border-radius:12px;
-      background: rgba(56,189,248,.08);
-      transition: all .2s ease;
-    }
-    .quickLink:hover{
-      background: rgba(56,189,248,.18);
-      transform: translateX(4px);
-    }
-
-    /* Subject screen list */
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      margin-bottom:12px;
-    }
-    .back{
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-      cursor:pointer;
-      user-select:none;
-      font-weight:900;
-      font-size:14px;
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.14);
-      padding:10px 12px;
-      border-radius: 12px;
-    }
-    .subjectMini{
-      color: var(--muted);
-      font-weight:800;
-      font-size:13px;
-    }
-
-    .subjectHeader{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:10px;
-    }
-    .subjectHeader h2{
-      margin:0;
-      font-size:18px;
-      font-weight:900;
-    }
-    .subjectHeader .right{
-      color: var(--muted);
-      font-weight:900;
-      font-size:14px;
-    }
-
-    .topics{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      margin-top:10px;
-    }
-    .topicRow{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      padding:12px 12px;
-      border-radius: 14px;
-      background: rgba(0,0,0,.18);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-    .topicRow .topicName{
-      font-weight:800;
-      font-size:14px;
-      line-height:1.35;
-      color: rgba(255,255,255,.95);
-    }
-    .topicRow input[type="checkbox"]{
-      width:20px;
-      height:20px;
-      accent-color: var(--green);
-      flex:0 0 auto;
-      cursor:pointer;
-    }
-
-    .actions{
-      display:flex;
-      gap:10px;
-      margin-top:14px;
-      flex-wrap:wrap;
-    }
-    button{
-      border:none;
-      border-radius: 10px;
-      padding:10px 12px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      color:#061223;
-      background: linear-gradient(90deg, var(--green), var(--accent));
-    }
-    button.secondary{
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.14);
-    }
-
-    .hidden{ display:none !important; }
-
-    /* ===================== Study Timer ===================== */
-    .timerModal{
-      position:fixed;
-      inset:0;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(10px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      padding:18px;
-    }
-
-    .timerPanel{
-      width:min(520px, 100%);
-      border-radius:22px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
-      box-shadow: 0 20px 50px rgba(0,0,0,.55);
-      padding:18px;
-    }
-
-    .timerTop{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-    }
-
-    .timerTitle{
-      font-weight:900;
-      font-size:18px;
-    }
-
-    .timerClose{
-      border:none;
-      cursor:pointer;
-      font-weight:900;
-      font-size:16px;
-      padding:8px 12px;
-      border-radius:12px;
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.25);
-      border: 1px solid rgba(255,255,255,.14);
-    }
-
-    .timerBig{
-      margin:18px 0 14px;
-      text-align:center;
-      font-weight:1000;
-      font-size:64px;
-      letter-spacing:1px;
-      padding:16px 10px;
-      border-radius:18px;
-      background: rgba(0,0,0,.20);
-      border: 1px solid rgba(255,255,255,.10);
-    }
-
-    .timerInputs{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-
-    .timerField label{
-      display:block;
-      font-weight:800;
-      font-size:12px;
-      color: var(--muted);
-      margin-bottom:6px;
-    }
-
-    .timerField input{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border: 1px solid rgba(255,255,255,.14);
-      background: rgba(0,0,0,.22);
-      color: rgba(255,255,255,.95);
-      font-weight:900;
-      font-size:16px;
-      outline:none;
-    }
-
-    .timerBtns{
-      display:flex;
-      gap:10px;
-      margin-top:14px;
-      flex-wrap:wrap;
-      justify-content:center;
-    }
-
-    .timerBtn{
-      border:none;
-      border-radius:14px;
-      padding:12px 16px;
-      font-weight:900;
-      font-size:14px;
-      cursor:pointer;
-      color:#061223;
-      background: linear-gradient(90deg, var(--green), var(--accent));
-    }
-
-    .timerBtn.secondary{
-      color: rgba(255,255,255,.92);
-      background: rgba(0,0,0,.22);
-      border: 1px solid rgba(255,255,255,.14);
-    }
-
-    .timerBtn:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-    }
-
-    .timerHint{
-      margin-top:12px;
-      text-align:center;
-      font-weight:800;
-      font-size:13px;
-      color: var(--muted);
-    }
-
-    /* Fullscreen timer: ONLY DIGITS */
-    .timerModal.fullscreen .timerPanel{
-      width:100vw !important;
-      height:100vh !important;
-      border-radius:0 !important;
-      padding:0 !important;
-      display:flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-    }
-
-    .timerModal.fullscreen .timerTop{
-      position:absolute !important;
-      top:18px !important;
-      right:18px !important;
-      left:auto !important;
-    }
-
-    .timerModal.fullscreen .timerTitle{ display:none !important; }
-    .timerModal.fullscreen .timerSetup{ display:none !important; }
-
-    .timerModal.fullscreen .timerBig{
-      font-size:110px !important;
-      background: transparent !important;
-      border: none !important;
-      box-shadow: none !important;
-      padding:0 !important;
-      margin:0 !important;
-    }
-
-    @media (max-width: 980px){
-      .metersGrid{ grid-template-columns: repeat(2, 1fr); }
-      .bottomRow{ grid-template-columns: 1fr; }
-      .bottomLeft{ display:none; }
-      .quickLinksCard{ grid-column:auto; min-height: unset; }
-    }
-
-    @media (max-width: 520px){
-      .metersGrid{ grid-template-columns: 1fr; }
-      .ring{ width:128px; height:128px; }
-      .ring .pct{ font-size:24px; }
-      .timerModal.fullscreen .timerBig{ font-size:72px !important; }
-    }
-  </style>
-</head>
-
-<body>
-  <div class="app">
-    <header class="hero">
-      <div class="hero-inner">
-        <div class="brand">
-          <h1>Study Tracker</h1>
-          <div class="sub">Click a subject to open topic list • Progress auto-saves</div>
-        </div>
-
-        <div class="hero-actions">
-          <button class="ribbonTimerBtn" id="openTimerBtn">⏱ Study Timer</button>
-
-          <div class="countdownPill" id="countdownPill" title="Click to change exam date">
-            <div class="label">Exam in</div>
-            <div class="time" id="countdownText">--</div>
-          </div>
-        </div>
-      </div>
-    </header>
-
-    <main class="content">
-
-      <div class="quoteCard">
-        <div class="quoteText" id="quoteText">“Small steps every day beat occasional big bursts.”</div>
-      </div>
-
-      <!-- Dashboard view -->
-      <section class="card" id="dashboardView">
-        <div class="titleRow">
-          <div class="title">Subjects</div>
-          <div class="hint">Tip: click subject name</div>
-        </div>
-
-        <div class="metersGrid" id="metersGrid"></div>
-
-        <div class="overallBelow">
-          Overall: <span id="overallPct">0%</span>
-        </div>
-
-        <div class="bottomRow">
-          <div class="card bottomLeft"></div>
-
-          <div class="quickLinksCard">
-            <div class="quickTitle">Quick Links</div>
-            <a class="quickLink" href="#" id="resetAllBtn">↻ Reset all progress</a>
-            <a class="quickLink" href="#" id="setExamBtn">🗓 Set exam date</a>
-            <a class="quickLink" href="#" id="shuffleQuoteBtn">✨ New quote</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- Subject detail view -->
-      <section class="card hidden" id="subjectView">
-        <div class="topbar">
-          <div class="back" id="backBtn">← Back</div>
-          <div class="subjectMini" id="subjectMini">Subject</div>
-        </div>
-
-        <div class="subjectHeader">
-          <h2 id="subjectTitle">Subject</h2>
-          <div class="right" id="subjectProgressText">0 / 0</div>
-        </div>
-
-        <div class="topics" id="topicsList"></div>
-
-        <div class="actions">
-          <button class="secondary" id="markAllBtn">Mark all</button>
-          <button class="secondary" id="clearAllBtn">Clear all</button>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <!-- Timer Modal (MUST be direct child of body) -->
-  <div class="timerModal hidden" id="timerModal" aria-hidden="true">
-    <div class="timerPanel">
-      <div class="timerTop">
-        <div class="timerTitle">Study Timer</div>
-        <button class="timerClose" id="timerCloseBtn">✕</button>
-      </div>
-
-      <div class="timerBig" id="timerBig">25:00</div>
-
-      <div class="timerSetup">
-        <div class="timerInputs">
-          <div class="timerField">
-            <label>Minutes</label>
-            <input type="number" id="minsInput" min="0" value="25" />
-          </div>
-          <div class="timerField">
-            <label>Seconds</label>
-            <input type="number" id="secsInput" min="0" max="59" value="0" />
-          </div>
-        </div>
-
-        <div class="timerBtns">
-          <button class="timerBtn" id="timerStartBtn">Start</button>
-          <button class="timerBtn secondary" id="timerPauseBtn" disabled>Pause</button>
-          <button class="timerBtn secondary" id="timerResetBtn">Reset</button>
-          <button class="timerBtn secondary" id="timerFullscreenBtn">Fullscreen</button>
-        </div>
-
-        <div class="timerHint" id="timerHint">Tip: Fullscreen shows only digits.</div>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /***********************
-     * Data + persistence
-     ***********************/
-    const STORAGE_KEY = "study_tracker_v1";
-
-    const DEFAULT_DATA = [
-      {
-        id: "math",
-        name: "Mathematics",
-        topics: [
-          "Sets, Relations & Functions",
-          "Trigonometry",
-          "Matrices & Determinants",
-          "Complex Numbers",
-          "Limits & Continuity",
-          "Differentiation",
-          "Integration",
-          "Probability"
-        ]
-      },
-      {
-        id: "phy",
-        name: "Physics",
-        topics: [
-          "Units & Dimensions",
-          "Kinematics",
-          "Newton’s Laws",
-          "Work, Power & Energy",
-          "Rotational Motion",
-          "Thermodynamics",
-          "Electrostatics",
-          "Current Electricity"
-        ]
-      },
-      {
-        id: "chem",
-        name: "Chemistry",
-        topics: [
-          "Mole Concept",
-          "Atomic Structure",
-          "Periodic Table",
-          "Chemical Bonding",
-          "Thermochemistry",
-          "Equilibrium",
-          "Electrochemistry",
-          "Organic Basics"
-        ]
-      },
-      {
-        id: "eng",
-        name: "English",
-        topics: [
-          "Reading Comprehension",
-          "Grammar Basics",
-          "Vocabulary",
-          "Para-jumbles",
-          "Sentence Correction",
-          "Synonyms/Antonyms"
-        ]
-      }
-    ];
-
-    function loadState(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if(!raw) return null;
-        return JSON.parse(raw);
-      }catch(e){
-        console.warn("Bad storage:", e);
-        return null;
-      }
-    }
-
-    function saveState(state){
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    }
-
-    function buildInitialState(){
-      return {
-        examDateISO: null, // e.g. "2026-12-31"
-        subjects: DEFAULT_DATA.map(s => ({
-          id: s.id,
-          name: s.name,
-          topics: s.topics.map(t => ({ name: t, done: false }))
-        }))
-      };
-    }
-
-    let state = loadState() || buildInitialState();
-    saveState(state);
-
-    /***********************
-     * Quotes
-     ***********************/
-    const QUOTES = [
-      "“Small steps every day beat occasional big bursts.”",
-      "“Consistency is the real superpower.”",
-      "“Discipline > motivation.”",
-      "“Make it easy to start, then keep going.”",
-      "“A little progress each day adds up to big results.”"
-    ];
-    const quoteEl = document.getElementById("quoteText");
-    function shuffleQuote(){
-      const q = QUOTES[Math.floor(Math.random() * QUOTES.length)];
-      quoteEl.textContent = q;
-    }
-
-    /***********************
-     * UI helpers
-     ***********************/
-    const dashboardView = document.getElementById("dashboardView");
-    const subjectView = document.getElementById("subjectView");
-
-    const metersGrid = document.getElementById("metersGrid");
-    const overallPctEl = document.getElementById("overallPct");
-
-    const subjectTitleEl = document.getElementById("subjectTitle");
-    const subjectMiniEl  = document.getElementById("subjectMini");
-    const subjectProgressTextEl = document.getElementById("subjectProgressText");
-    const topicsListEl = document.getElementById("topicsList");
-
-    let currentSubjectId = null;
-
-    function pctForSubject(subject){
-      const total = subject.topics.length;
-      const done = subject.topics.filter(t => t.done).length;
-      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
-      return { total, done, pct };
-    }
-
-    function overallPct(){
-      const allTopics = state.subjects.flatMap(s => s.topics);
-      const total = allTopics.length;
-      const done = allTopics.filter(t => t.done).length;
-      return total === 0 ? 0 : Math.round((done / total) * 100);
-    }
-
-    function ringSVG(pct){
-      // 2 circles: track + progress, using stroke-dasharray
-      const r = 46;
-      const c = 2 * Math.PI * r;
-      const filled = (pct/100) * c;
-      const gap = c - filled;
-
-      return `
-        <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
-          <circle cx="60" cy="60" r="${r}" fill="none" stroke="rgba(255,255,255,.10)" stroke-width="10"/>
-          <circle cx="60" cy="60" r="${r}" fill="none"
-            stroke="rgba(56,189,248,.95)" stroke-width="10"
-            stroke-linecap="round"
-            transform="rotate(-90 60 60)"
-            stroke-dasharray="${filled} ${gap}"
-          />
-        </svg>
-      `;
-    }
-
-    /***********************
-     * Render dashboard
-     ***********************/
-    function renderDashboard(){
-      metersGrid.innerHTML = "";
-
-      state.subjects.forEach(subject => {
-        const { total, done, pct } = pctForSubject(subject);
-
-        const card = document.createElement("div");
-        card.className = "meterCard";
-
-        card.innerHTML = `
-          <div class="ring" role="img" aria-label="${subject.name} progress ${pct}%">
-            ${ringSVG(pct)}
-            <div class="pct">${pct}%</div>
-          </div>
-
-          <div class="subjectName" data-subject="${subject.id}">${subject.name}</div>
-          <div class="doneText">${done} / ${total} done</div>
-        `;
-
-        card.querySelector(".subjectName").addEventListener("click", () => openSubject(subject.id));
-        metersGrid.appendChild(card);
-      });
-
-      overallPctEl.textContent = overallPct() + "%";
-    }
-
-    /***********************
-     * Render subject view
-     ***********************/
-    function renderSubject(){
-      const subject = state.subjects.find(s => s.id === currentSubjectId);
-      if(!subject) return;
-
-      const { total, done, pct } = pctForSubject(subject);
-      subjectTitleEl.textContent = subject.name;
-      subjectMiniEl.textContent = subject.name + " • " + pct + "%";
-      subjectProgressTextEl.textContent = `${done} / ${total}`;
-
-      topicsListEl.innerHTML = "";
-
-      subject.topics.forEach((topic, idx) => {
-        const row = document.createElement("div");
-        row.className = "topicRow";
-
-        row.innerHTML = `
-          <div class="topicName">${topic.name}</div>
-          <input type="checkbox" ${topic.done ? "checked" : ""} aria-label="Mark done: ${topic.name}">
-        `;
-
-        const cb = row.querySelector('input[type="checkbox"]');
-        cb.addEventListener("change", () => {
-          topic.done = cb.checked;
-          saveState(state);
-          renderSubject();
-          renderDashboard();
-        });
-
-        topicsListEl.appendChild(row);
-      });
-    }
-
-    function openSubject(subjectId){
-      currentSubjectId = subjectId;
-      dashboardView.classList.add("hidden");
-      subjectView.classList.remove("hidden");
-      renderSubject();
-    }
-
-    function goBack(){
-      currentSubjectId = null;
-      subjectView.classList.add("hidden");
-      dashboardView.classList.remove("hidden");
-      renderDashboard();
-    }
-
-    document.getElementById("backBtn").addEventListener("click", goBack);
-
-    document.getElementById("markAllBtn").addEventListener("click", () => {
-      const subject = state.subjects.find(s => s.id === currentSubjectId);
-      if(!subject) return;
-      subject.topics.forEach(t => t.done = true);
-      saveState(state);
-      renderSubject();
-      renderDashboard();
-    });
-
-    document.getElementById("clearAllBtn").addEventListener("click", () => {
-      const subject = state.subjects.find(s => s.id === currentSubjectId);
-      if(!subject) return;
-      subject.topics.forEach(t => t.done = false);
-      saveState(state);
-      renderSubject();
-      renderDashboard();
-    });
-
-    /***********************
-     * Reset all
-     ***********************/
-    document.getElementById("resetAllBtn").addEventListener("click", (e) => {
-      e.preventDefault();
-      if(!confirm("Reset all progress?")) return;
-      state.subjects.forEach(s => s.topics.forEach(t => t.done = false));
-      saveState(state);
-      renderDashboard();
-      if(currentSubjectId) renderSubject();
-    });
-
-    /***********************
-     * Exam countdown
-     ***********************/
-    const countdownText = document.getElementById("countdownText");
-    const countdownPill = document.getElementById("countdownPill");
-
-    function formatCountdown(){
-      if(!state.examDateISO){
-        countdownText.textContent = "Set date";
-        return;
-      }
-      const now = new Date();
-      const target = new Date(state.examDateISO + "T00:00:00");
-      const diff = target - now;
-
-      if(diff <= 0){
-        countdownText.textContent = "Today!";
-        return;
-      }
-      const days = Math.floor(diff / (1000*60*60*24));
-      const hrs  = Math.floor((diff / (1000*60*60)) % 24);
-      const mins = Math.floor((diff / (1000*60)) % 60);
-      countdownText.textContent = `${days}d ${hrs}h ${mins}m`;
-    }
-
-    function setExamDateFlow(){
-      const current = state.examDateISO || "";
-      const input = prompt("Enter exam date (YYYY-MM-DD):", current);
-      if(input === null) return;
-
-      const ok = /^\d{4}-\d{2}-\d{2}$/.test(input);
-      if(!ok){
-        alert("Invalid format. Use YYYY-MM-DD");
-        return;
-      }
-
-      // basic validity check
-      const d = new Date(input + "T00:00:00");
-      if(Number.isNaN(d.getTime())){
-        alert("Invalid date.");
-        return;
-      }
-
-      state.examDateISO = input;
-      saveState(state);
-      formatCountdown();
-    }
-
-    countdownPill.addEventListener("click", setExamDateFlow);
-    document.getElementById("setExamBtn").addEventListener("click", (e) => {
-      e.preventDefault();
-      setExamDateFlow();
-    });
-
-    /***********************
-     * Timer
-     ***********************/
-    const timerModal = document.getElementById("timerModal");
-    const openTimerBtn = document.getElementById("openTimerBtn");
-    const timerCloseBtn = document.getElementById("timerCloseBtn");
-
-    const timerBig = document.getElementById("timerBig");
-    const minsInput = document.getElementById("minsInput");
-    const secsInput = document.getElementById("secsInput");
-
-    const timerStartBtn = document.getElementById("timerStartBtn");
-    const timerPauseBtn = document.getElementById("timerPauseBtn");
-    const timerResetBtn = document.getElementById("timerResetBtn");
-    const timerFullscreenBtn = document.getElementById("timerFullscreenBtn");
-
-    let timerInterval = null;
-    let remainingSeconds = 25 * 60;
-
-    function pad2(n){ return String(n).padStart(2, "0"); }
-
-    function renderTimer(){
-      const m = Math.floor(remainingSeconds / 60);
-      const s = remainingSeconds % 60;
-      timerBig.textContent = `${pad2(m)}:${pad2(s)}`;
-    }
-
-    function setRemainingFromInputs(){
-      const m = Math.max(0, parseInt(minsInput.value || "0", 10));
-      const s = Math.max(0, Math.min(59, parseInt(secsInput.value || "0", 10)));
-      minsInput.value = m;
-      secsInput.value = s;
-      remainingSeconds = (m * 60) + s;
-      renderTimer();
-    }
-
-    minsInput.addEventListener("change", setRemainingFromInputs);
-    secsInput.addEventListener("change", setRemainingFromInputs);
-
-    function openTimer(){
-      timerModal.classList.remove("hidden");
-      timerModal.setAttribute("aria-hidden", "false");
-      setRemainingFromInputs();
-    }
-
-    function closeTimer(){
-      timerModal.classList.add("hidden");
-      timerModal.classList.remove("fullscreen");
-      timerModal.setAttribute("aria-hidden", "true");
-    }
-
-    openTimerBtn.addEventListener("click", openTimer);
-    timerCloseBtn.addEventListener("click", closeTimer);
-
-    // click outside panel to close
-    timerModal.addEventListener("click", (e) => {
-      if(e.target === timerModal) closeTimer();
-    });
-
-    function startTimer(){
-      if(timerInterval) return;
-      if(remainingSeconds <= 0) setRemainingFromInputs();
-
-      timerStartBtn.disabled = true;
-      timerPauseBtn.disabled = false;
-
-      timerInterval = setInterval(() => {
-        remainingSeconds = Math.max(0, remainingSeconds - 1);
-        renderTimer();
-
-        if(remainingSeconds === 0){
-          pauseTimer();
-          // simple alert (optional)
-          try { navigator.vibrate?.(200); } catch(_){}
-          alert("Time's up!");
-        }
-      }, 1000);
-    }
-
-    function pauseTimer(){
-      if(timerInterval){
-        clearInterval(timerInterval);
-        timerInterval = null;
-      }
-      timerStartBtn.disabled = false;
-      timerPauseBtn.disabled = true;
-    }
-
-    function resetTimer(){
-      pauseTimer();
-      setRemainingFromInputs();
-    }
-
-    function toggleFullscreen(){
-      timerModal.classList.toggle("fullscreen");
-    }
-
-    timerStartBtn.addEventListener("click", startTimer);
-    timerPauseBtn.addEventListener("click", pauseTimer);
-    timerResetBtn.addEventListener("click", resetTimer);
-    timerFullscreenBtn.addEventListener("click", toggleFullscreen);
-
-    // ESC closes timer
-    document.addEventListener("keydown", (e) => {
-      if(e.key === "Escape" && !timerModal.classList.contains("hidden")){
-        closeTimer();
-      }
-    });
-
-    /***********************
-     * Wire up quote button
-     ***********************/
-    document.getElementById("shuffleQuoteBtn").addEventListener("click", (e) => {
-      e.preventDefault();
-      shuffleQuote();
-    });
-
-    /***********************
-     * Init
-     ***********************/
-    shuffleQuote();
-    renderDashboard();
-    formatCountdown();
-    renderTimer();
-    setInterval(formatCountdown, 30_000); // update countdown every 30s
-  </script>
-</body>
-</html>
-
+:root{
+  --bg:#0b1020;
+  --text:#e8eefc;
+  --muted:#a8b7d8;
+  --border: 1px solid rgba(255,255,255,.10);
+  --shadow: 0 18px 40px rgba(0,0,0,.35);
+  --radius:18px;
+  --green:#22c55e;
+  --accent:#38bdf8;
+}
+
+*{ box-sizing:border-box; }
+
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background:
+    radial-gradient(1200px 800px at 15% 15%, rgba(34,197,94,.10), transparent 55%),
+    radial-gradient(900px 600px at 85% 25%, rgba(56,189,248,.10), transparent 55%),
+    var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:26px 16px;
+}
+
+.app{
+  width:min(1100px, 100%);
+  border-radius: 26px;
+  overflow:hidden;
+  border: var(--border);
+  box-shadow: var(--shadow);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
+}
+
+/* Header ribbon */
+.hero{
+  padding:22px 22px 18px;
+  background: linear-gradient(90deg, rgba(34,197,94,.45), rgba(56,189,248,.45));
+  position:relative;
+}
+.hero:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.45));
+  pointer-events:none;
+}
+.hero-inner{
+  position:relative;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.brand h1{
+  margin:0;
+  font-size:24px;
+  font-weight:900;
+  letter-spacing:.2px;
+}
+
+/* Countdown pill */
+.countdownPill{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  border-radius: 999px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+  user-select:none;
+  cursor:pointer;
+}
+.countdownPill .time{
+  font-weight:900;
+  font-size:14px;
+  color: rgba(255,255,255,.96);
+  white-space:nowrap;
+  padding:2px 6px;
+  border-radius: 10px;
+}
+.countdownPill:hover .time{
+  background: rgba(255,255,255,.08);
+}
+
+.content{ padding:20px 22px 28px; }
+
+/* Quote Card */
+.quoteCard{
+  margin-bottom:18px;
+  padding:18px;
+  border-radius:18px;
+  background: linear-gradient(90deg, rgba(34,197,94,.15), rgba(56,189,248,.15));
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  text-align:center;
+}
+.quoteText{
+  font-size:16px;
+  font-weight:800;
+  line-height:1.5;
+  color: rgba(255,255,255,.95);
+}
+
+.card{
+  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+  border: var(--border);
+  border-radius: var(--radius);
+  padding:18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+
+.titleRow{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:14px;
+  gap:12px;
+}
+.titleRow .title{
+  font-weight:900;
+  font-size:18px;
+}
+
+.metersGrid{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap:14px;
+}
+
+.meterCard{
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding:14px 12px 12px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+
+.ring{
+  width:120px;
+  height:120px;
+  border-radius:999px;
+  display:grid;
+  place-items:center;
+  position:relative;
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.14);
+}
+.ring .pct{
+  position:absolute;
+  font-weight:900;
+  font-size:22px;
+  color: rgba(255,255,255,.95);
+}
+.ring svg{ display:block; }
+
+.subjectName{
+  font-weight:900;
+  font-size:15px;
+  color: rgba(255,255,255,.95);
+  cursor:pointer;
+  user-select:none;
+  text-align:center;
+  line-height:1.2;
+}
+.subjectName:hover{ text-decoration: underline; }
+
+.doneText{
+  color: var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+.overallBelow{
+  margin-top:14px;
+  text-align:right;
+  font-weight:900;
+  font-size:14px;
+  color: rgba(255,255,255,.88);
+}
+.overallBelow span{
+  color: var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+/* Bottom row layout: makes Quick Links same "section size" feel */
+.bottomRow{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  gap:18px;
+  align-items:stretch;
+}
+.bottomLeft{
+  border-radius:18px;
+  background: rgba(0,0,0,0);
+  border: 1px solid rgba(255,255,255,0);
+}
+
+/* Quick Links card (bigger) */
+.quickLinksCard{
+  padding:18px;
+  border-radius:18px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.12);
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  min-height:260px;
+}
+.quickTitle{
+  font-weight:900;
+  font-size:15px;
+  margin-bottom:6px;
+  color: rgba(255,255,255,.95);
+}
+.quickLink{
+  text-decoration:none;
+  font-weight:900;
+  font-size:14px;
+  color: var(--accent);
+  padding:12px 12px;
+  border-radius:12px;
+  background: rgba(56,189,248,.08);
+  transition: all .2s ease;
+}
+.quickLink:hover{
+  background: rgba(56,189,248,.18);
+  transform: translateX(4px);
+}
+
+/* Subject screen list */
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+.back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  user-select:none;
+  font-weight:900;
+  font-size:14px;
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.14);
+  padding:10px 12px;
+  border-radius: 12px;
+}
+.subjectMini{
+  color: var(--muted);
+  font-weight:800;
+  font-size:13px;
+}
+
+.subjectHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.subjectHeader h2{
+  margin:0;
+  font-size:18px;
+  font-weight:900;
+}
+.subjectHeader .right{
+  color: var(--muted);
+  font-weight:900;
+  font-size:14px;
+}
+
+.topics{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-top:10px;
+}
+.topicRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:12px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.topicRow .topicName{
+  font-weight:800;
+  font-size:14px;
+  line-height:1.35;
+  color: rgba(255,255,255,.95);
+}
+.topicRow input[type="checkbox"]{
+  width:20px;
+  height:20px;
+  accent-color: var(--green);
+  flex:0 0 auto;
+  cursor:pointer;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+}
+button{
+  border:none;
+  border-radius: 10px;
+  padding:10px 12px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  color:#061223;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+}
+button.secondary{
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.hidden{ display:none !important; }
+
+@media (max-width: 980px){
+  .metersGrid{ grid-template-columns: repeat(2, 1fr); }
+  .bottomRow{ grid-template-columns: 1fr; }
+  .quickLinksCard{ min-height: unset; }
+}
+@media (max-width: 520px){
+  .metersGrid{ grid-template-columns: 1fr; }
+  .ring{ width:128px; height:128px; }
+  .ring .pct{ font-size:24px; }
+}
+/* CANCEL old Quick Links sizing */
+.quickLinks {
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+}
+/* MAKE QUICK LINKS SAME SIZE AS SUBJECT CARD */
+.quickLinks {
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 18px;
+  min-height: 190px; /* matches subject card height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.meterCard,
+.quickLinks {
+  min-height: 210px;
+}
+/* ===== OVERRIDE: make Quick Links same size as a subject card (e.g., Business Economics) ===== */
+
+/* Cancel old bottomRow layout (the 1fr 360px one) */
+.bottomRow{
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap:14px !important;            /* same gap as metersGrid */
+  align-items: stretch !important;
+}
+
+/* Make the empty left area span 3 columns */
+.bottomLeft{
+  grid-column: 1 / span 3 !important;
+}
+
+/* Put Quick Links in the 4th column (same width as a subject card) */
+.quickLinksCard{
+  grid-column: 4 !important;
+  width: 100% !important;
+  min-height: 210px !important;  /* same “card height feel” as subject boxes */
+  padding:14px 12px 12px !important;
+  border-radius:18px !important;
+
+  /* Match the subject card styling */
+  background: rgba(0,0,0,.18) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: none !important;
+}
+
+/* Make the links fit nicely in the smaller box */
+.quickLink{
+  padding:10px 12px !important;
+  border-radius:12px !important;
+}
+
+/* Responsive: on smaller screens keep it full width */
+@media (max-width: 980px){
+  .bottomRow{
+    grid-template-columns: 1fr !important;
+  }
+  .bottomLeft{
+    grid-column: auto !important;
+    display: none !important; /* hide empty block on mobile */
+  }
+  .quickLinksCard{
+    grid-column: auto !important;
+    min-height: unset !important;
+  }
+}
+/* ===== Study Timer ===== */
+.timerCTAwrap{
+  margin-top: 16px;
+  display:flex;
+  justify-content:flex-start;
+}
+
+.timerCTA{
+  border:none;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  color:#061223;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+}
+
+.timerModal{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+  padding:18px;
+}
+
+.timerPanel{
+  width:min(520px, 100%);
+  border-radius:22px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+  box-shadow: 0 20px 50px rgba(0,0,0,.55);
+  padding:18px;
+}
+
+.timerTop{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+
+.timerTitle{
+  font-weight:900;
+  font-size:18px;
+}
+
+.timerClose{
+  border:none;
+  cursor:pointer;
+  font-weight:900;
+  font-size:16px;
+  padding:8px 12px;
+  border-radius:12px;
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.timerBig{
+  margin:18px 0 14px;
+  text-align:center;
+  font-weight:1000;
+  font-size:64px;
+  letter-spacing:1px;
+  padding:16px 10px;
+  border-radius:18px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.timerInputs{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:12px;
+}
+
+.timerField label{
+  display:block;
+  font-weight:800;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom:6px;
+}
+
+.timerField input{
+  width:100%;
+  padding:12px 12px;
+  border-radius:14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.95);
+  font-weight:900;
+  font-size:16px;
+  outline:none;
+}
+
+.timerBtns{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+.timerBtn{
+  border:none;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  color:#061223;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+}
+
+.timerBtn.secondary{
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+.timerBtn:disabled{
+  opacity:.45;
+  cursor:not-allowed;
+}
+
+.timerHint{
+  margin-top:12px;
+  text-align:center;
+  font-weight:800;
+  font-size:13px;
+  color: var(--muted);
+}
+/* Ribbon timer button next to exam countdown */
+.hero-actions{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.ribbonTimerBtn{
+  border:none;
+  border-radius:999px;
+  padding:10px 14px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+}
+
+.ribbonTimerBtn:hover{
+  background: rgba(255,255,255,.10);
+}
