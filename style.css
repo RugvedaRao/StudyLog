@@ -2,11 +2,43 @@
   --bg:#0b1020;
   --text:#e8eefc;
   --muted:#a8b7d8;
+
   --border: 1px solid rgba(255,255,255,.10);
   --shadow: 0 18px 40px rgba(0,0,0,.35);
   --radius:18px;
+
   --green:#22c55e;
   --accent:#38bdf8;
+
+  /* surfaces */
+  --cardGradTop: rgba(255,255,255,.045);
+  --cardGradBot: rgba(255,255,255,.02);
+  --tileBg: rgba(0,0,0,.18);
+  --tileBorder: rgba(255,255,255,.10);
+  --softBorder: rgba(255,255,255,.14);
+  --chipBg: rgba(0,0,0,.22);
+  --linkBg: rgba(56,189,248,.08);
+  --linkHover: rgba(56,189,248,.18);
+}
+
+/* ✅ Light theme overrides */
+body[data-theme="light"]{
+  --bg:#f6f8ff;
+  --text:#0b1020;
+  --muted:#46536b;
+
+  --border: 1px solid rgba(0,0,0,.10);
+  --shadow: 0 18px 40px rgba(0,0,0,.12);
+
+  --cardGradTop: rgba(0,0,0,.03);
+  --cardGradBot: rgba(0,0,0,.01);
+  --tileBg: rgba(255,255,255,.75);
+  --tileBorder: rgba(0,0,0,.10);
+  --softBorder: rgba(0,0,0,.12);
+  --chipBg: rgba(255,255,255,.80);
+
+  --linkBg: rgba(56,189,248,.14);
+  --linkHover: rgba(56,189,248,.22);
 }
 
 *{ box-sizing:border-box; }
@@ -82,7 +114,9 @@ body{
   border: 1px solid rgba(255,255,255,.18);
   backdrop-filter: blur(8px);
 }
-.ribbonTimerBtn:hover{ background: rgba(255,255,255,.10); }
+.ribbonTimerBtn:hover{
+  background: rgba(255,255,255,.10);
+}
 
 /* Countdown pill */
 .countdownPill{
@@ -105,7 +139,9 @@ body{
   padding:2px 6px;
   border-radius: 10px;
 }
-.countdownPill:hover .time{ background: rgba(255,255,255,.08); }
+.countdownPill:hover .time{
+  background: rgba(255,255,255,.08);
+}
 
 .content{ padding:20px 22px 28px; }
 
@@ -127,7 +163,7 @@ body{
 }
 
 .card{
-  background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
+  background: linear-gradient(180deg, var(--cardGradTop), var(--cardGradBot));
   border: var(--border);
   border-radius: var(--radius);
   padding:18px;
@@ -146,7 +182,32 @@ body{
   font-size:18px;
 }
 
-/* Progress cards grid */
+/* ✅ Theme toggle button */
+.themeToggle{
+  margin-left:auto;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 12px;
+  border-radius: 999px;
+  cursor:pointer;
+  font-weight:900;
+  font-size:13px;
+
+  color: rgba(255,255,255,.92);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(8px);
+}
+body[data-theme="light"] .themeToggle{
+  color: rgba(0,0,0,.78);
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.12);
+}
+.themeIcon{ font-size:15px; line-height:1; }
+.themeText{ line-height:1; }
+
+/* Progress rings grid */
 .metersGrid{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
@@ -154,8 +215,8 @@ body{
 }
 
 .meterCard{
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
   border-radius: 18px;
   padding:14px 12px 12px;
   display:flex;
@@ -174,20 +235,23 @@ body{
   place-items:center;
   position:relative;
   background: rgba(0,0,0,.16);
-  border: 1px solid rgba(255,255,255,.14);
+  border: 1px solid var(--softBorder);
+}
+body[data-theme="light"] .ring{
+  background: rgba(255,255,255,.70);
 }
 .ring .pct{
   position:absolute;
   font-weight:900;
   font-size:22px;
-  color: rgba(255,255,255,.95);
+  color: var(--text);
 }
 .ring svg{ display:block; }
 
 .subjectName{
   font-weight:900;
   font-size:15px;
-  color: rgba(255,255,255,.95);
+  color: var(--text);
   cursor:pointer;
   user-select:none;
   text-align:center;
@@ -208,13 +272,16 @@ body{
   font-size:14px;
   color: rgba(255,255,255,.88);
 }
+body[data-theme="light"] .overallBelow{
+  color: rgba(0,0,0,.75);
+}
 .overallBelow span{
   color: var(--muted);
   font-weight:800;
   font-size:13px;
 }
 
-/* ✅ Extras area: aligned to same 4 columns */
+/* ✅ Extras grid aligned to 4 columns */
 .extrasGrid{
   margin-top:18px;
   display:grid;
@@ -222,54 +289,18 @@ body{
   gap:14px;
   align-items:stretch;
 }
-
-/* Spacer takes column 3 */
 .extrasSpacer{
   background: transparent;
-  border: none;
-}
-
-/* ✅ Quick Links (col 4) */
-.quickLinksCard{
-  width:100%;
-  min-height:210px;
-  padding:14px 12px 12px;
-  border-radius:18px;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.10);
-  box-shadow:none;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-.quickTitle{
-  font-weight:900;
-  font-size:16px;
-  margin-bottom:8px;
-  color: rgba(255,255,255,.95);
-}
-.quickLink{
-  text-decoration:none;
-  font-weight:900;
-  font-size:14px;
-  color: var(--accent);
-  padding:10px 12px;
-  border-radius:12px;
-  background: rgba(56,189,248,.08);
-  transition: all .2s ease;
-}
-.quickLink:hover{
-  background: rgba(56,189,248,.18);
-  transform: translateX(4px);
+  border:none;
 }
 
 /* =========================
-   ✅ To-Do List (2 columns wide)
+   To-Do List (2 columns wide)
    ========================= */
 .todoCard{
-  grid-column: 1 / span 2; /* ✅ till Business Laws */
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.10);
+  grid-column: 1 / span 2;
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
   border-radius:18px;
   padding:16px;
   min-height:210px;
@@ -277,7 +308,6 @@ body{
   flex-direction:column;
   gap:12px;
 }
-
 .todoHeader{
   font-weight:900;
   font-size:16px;
@@ -290,9 +320,9 @@ body{
   flex:1;
   padding:10px 12px;
   border-radius:12px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.22);
-  color:white;
+  border: 1px solid var(--softBorder);
+  background: var(--chipBg);
+  color: var(--text);
   font-weight:800;
   outline:none;
 }
@@ -321,12 +351,49 @@ body{
   border-radius:10px;
   font-weight:800;
 }
+body[data-theme="light"] .todoItem{
+  background: rgba(0,0,0,.04);
+}
 .todoItem button{
   background:none;
   border:none;
   color:#ff6b6b;
   font-weight:900;
   cursor:pointer;
+}
+
+/* Quick Links */
+.quickLinksCard{
+  width:100%;
+  min-height:210px;
+  padding:14px 12px 12px;
+  border-radius:18px;
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
+  box-shadow:none;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.quickTitle{
+  font-weight:900;
+  font-size:16px;
+  margin-bottom:8px;
+  color: var(--text);
+}
+.quickLink{
+  text-decoration:none;
+  font-weight:900;
+  font-size:14px;
+  color: var(--accent);
+  padding:10px 12px;
+  border-radius:12px;
+  background: var(--linkBg);
+  transition: all .2s ease;
+}
+.quickLink:hover{
+  background: var(--linkHover);
+  transform: translateX(4px);
 }
 
 /* Subject screen list */
@@ -350,6 +417,11 @@ body{
   border: 1px solid rgba(255,255,255,.14);
   padding:10px 12px;
   border-radius: 12px;
+}
+body[data-theme="light"] .back{
+  color: rgba(0,0,0,.78);
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.12);
 }
 .subjectMini{
   color: var(--muted);
@@ -388,14 +460,14 @@ body{
   gap:12px;
   padding:12px 12px;
   border-radius: 14px;
-  background: rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.10);
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
 }
 .topicRow .topicName{
   font-weight:800;
   font-size:14px;
   line-height:1.35;
-  color: rgba(255,255,255,.95);
+  color: var(--text);
 }
 .topicRow input[type="checkbox"]{
   width:20px;
@@ -426,6 +498,11 @@ button.secondary{
   background: rgba(0,0,0,.20);
   border: 1px solid rgba(255,255,255,.14);
 }
+body[data-theme="light"] button.secondary{
+  color: rgba(0,0,0,.78);
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.12);
+}
 
 .hidden{ display:none !important; }
 
@@ -449,6 +526,11 @@ button.secondary{
   box-shadow: 0 20px 50px rgba(0,0,0,.55);
   padding:18px;
 }
+body[data-theme="light"] .timerPanel{
+  border: 1px solid rgba(0,0,0,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
+  box-shadow: 0 20px 50px rgba(0,0,0,.18);
+}
 .timerTop{
   display:flex;
   align-items:center;
@@ -467,6 +549,11 @@ button.secondary{
   background: rgba(0,0,0,.25);
   border: 1px solid rgba(255,255,255,.14);
 }
+body[data-theme="light"] .timerClose{
+  color: rgba(0,0,0,.78);
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.12);
+}
 .timerBig{
   margin:18px 0 14px;
   text-align:center;
@@ -477,6 +564,10 @@ button.secondary{
   border-radius:18px;
   background: rgba(0,0,0,.20);
   border: 1px solid rgba(255,255,255,.10);
+}
+body[data-theme="light"] .timerBig{
+  background: rgba(0,0,0,.05);
+  border: 1px solid rgba(0,0,0,.12);
 }
 .timerInputs{
   display:grid;
@@ -494,9 +585,9 @@ button.secondary{
   width:100%;
   padding:12px 12px;
   border-radius:14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.22);
-  color: rgba(255,255,255,.95);
+  border: 1px solid var(--softBorder);
+  background: var(--chipBg);
+  color: var(--text);
   font-weight:900;
   font-size:16px;
   outline:none;
@@ -523,6 +614,11 @@ button.secondary{
   background: rgba(0,0,0,.22);
   border: 1px solid rgba(255,255,255,.14);
 }
+body[data-theme="light"] .timerBtn.secondary{
+  color: rgba(0,0,0,.78);
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.12);
+}
 .timerBtn:disabled{ opacity:.45; cursor:not-allowed; }
 .timerHint{
   margin-top:12px;
@@ -532,9 +628,7 @@ button.secondary{
   color: var(--muted);
 }
 
-/* =========================
-   Alarm Popup
-   ========================= */
+/* Alarm Popup */
 .alarmOverlay{
   position:fixed;
   inset:0;
@@ -555,17 +649,25 @@ button.secondary{
   padding:18px;
   text-align:center;
 }
+body[data-theme="light"] .alarmBox{
+  border: 1px solid rgba(0,0,0,.12);
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.82));
+  box-shadow: 0 20px 60px rgba(0,0,0,.18);
+}
 .alarmTitle{
   font-weight:1000;
   font-size:20px;
   margin-bottom:8px;
-  color: rgba(255,255,255,.95);
+  color: var(--text);
 }
 .alarmMsg{
   color: rgba(255,255,255,.85);
   font-weight:800;
   font-size:14px;
   margin-bottom:14px;
+}
+body[data-theme="light"] .alarmMsg{
+  color: rgba(0,0,0,.70);
 }
 .alarmOk{
   width:100%;
