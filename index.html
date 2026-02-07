@@ -4,20 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
-  <link rel="stylesheet" href="./styles.css" />
+  <!-- IMPORTANT: your repo has style.css -->
+  <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <div class="app">
     <header class="hero">
-    <div class="hero-actions">
-  <button class="ribbonTimerBtn" id="openTimerBtn" type="button">Set Timer</button>
+      <div class="hero-inner">
+        <!-- Title back -->
+        <div class="brand">
+          <h1>CA Foundation Tracker</h1>
+        </div>
 
-  <div class="countdownPill" id="countdownPill" title="Click to set/change exam date">
-    <div class="time" id="countdownTime">SET EXAM DATE</div>
-  </div>
-</div>
+        <!-- Ribbon actions: Set Timer + Exam Countdown -->
+        <div class="hero-actions">
+          <button class="ribbonTimerBtn" id="openTimerBtn" type="button">Set Timer</button>
 
+          <div class="countdownPill" id="countdownPill" title="Click to set/change exam date">
+            <div class="time" id="countdownTime">SET EXAM DATE</div>
+          </div>
+        </div>
+      </div>
     </header>
 
     <main class="content">
@@ -38,44 +46,8 @@
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
-<!-- Study Timer CTA -->
-<div class="timerCTAwrap">
-  <button class="timerCTA" id="openTimerBtn">Set Study Timer</button>
-</div>
 
-<!-- Study Timer Modal -->
-<div class="timerModal hidden" id="timerModal">
-  <div class="timerPanel">
-    <div class="timerTop">
-      <div class="timerTitle">Study Timer</div>
-      <button class="timerClose" id="closeTimerBtn">✕</button>
-    </div>
-
-   <div class="timerBig" id="timerBig">00:00</div>
-
-<div class="timerSetup" id="timerSetup">
-  <div class="timerInputs" id="timerInputs">
-    <div class="timerField">
-      <label for="timerMin">Minutes</label>
-      <input type="number" id="timerMin" min="0" max="999" value="5"/>
-    </div>
-    <div class="timerField">
-      <label for="timerSec">Seconds</label>
-      <input type="number" id="timerSec" min="0" max="59" value="0"/>
-    </div>
-  </div>
-
-  <div class="timerBtns">
-    <button class="timerBtn" id="startTimerBtn">Start</button>
-    <button class="timerBtn secondary" id="pauseTimerBtn" disabled>Pause</button>
-    <button class="timerBtn secondary" id="resetTimerBtn" disabled>Reset</button>
-  </div>
-
-  <div class="timerHint" id="timerHint">Set time and press Start.</div>
-</div>
-
-
-          <!-- Bottom row: empty left + large Quick Links right -->
+          <!-- Bottom row: empty left + Quick Links right -->
           <div class="bottomRow">
             <div class="bottomLeft"></div>
 
@@ -120,9 +92,44 @@
           </div>
         </div>
       </section>
+
+      <!-- Study Timer Modal (kept outside cards) -->
+      <div class="timerModal hidden" id="timerModal">
+        <div class="timerPanel">
+          <div class="timerTop">
+            <div class="timerTitle">Study Timer</div>
+            <button class="timerClose" id="closeTimerBtn" type="button">✕</button>
+          </div>
+
+          <div class="timerBig" id="timerBig">00:00</div>
+
+          <div class="timerSetup" id="timerSetup">
+            <div class="timerInputs" id="timerInputs">
+              <div class="timerField">
+                <label for="timerMin">Minutes</label>
+                <input type="number" id="timerMin" min="0" max="999" value="5"/>
+              </div>
+              <div class="timerField">
+                <label for="timerSec">Seconds</label>
+                <input type="number" id="timerSec" min="0" max="59" value="0"/>
+              </div>
+            </div>
+
+            <div class="timerBtns">
+              <button class="timerBtn" id="startTimerBtn" type="button">Start</button>
+              <button class="timerBtn secondary" id="pauseTimerBtn" type="button" disabled>Pause</button>
+              <button class="timerBtn secondary" id="resetTimerBtn" type="button" disabled>Reset</button>
+            </div>
+
+            <div class="timerHint" id="timerHint">Set time and press Start.</div>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
   <script src="./app.js"></script>
 </body>
 </html>
+
