@@ -22,7 +22,8 @@ function loadDailyQuote(){
   const today = new Date();
   const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
   const quote = QUOTES[dayIndex % QUOTES.length];
-  document.getElementById("quoteText").textContent = quote;
+  const el = document.getElementById("quoteText");
+  if(el) el.textContent = quote;
 }
 
 // ----------------------------
@@ -85,6 +86,8 @@ const SUBJECTS = {
 
 const STORAGE_KEY = "ca_foundation_tracker_v2";
 const EXAM_DATE_KEY = "ca_exam_date_v3";
+const TODO_KEY = "ca_todo_list_v1";
+const THEME_KEY = "ca_theme_v1";
 
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
@@ -92,17 +95,14 @@ function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
 // ============================
 // ✅ Theme Toggle (Dark/Light)
 // ============================
-const THEME_KEY = "ca_theme_v1";
-
 function applyTheme(theme){
-  // theme: "dark" | "light"
   document.body.setAttribute("data-theme", theme);
 
   const icon = document.getElementById("themeIcon");
   const text = document.getElementById("themeText");
 
-  if(icon) icon.textContent = theme === "light" ? "☀️" : "🌙";
-  if(text) text.textContent = theme === "light" ? "Light" : "Dark";
+  if(icon) icon.textContent = (theme === "light") ? "☀️" : "🌙";
+  if(text) text.textContent = (theme === "light") ? "Light" : "Dark";
 
   localStorage.setItem(THEME_KEY, theme);
 }
@@ -113,12 +113,15 @@ function initTheme(){
   applyTheme(theme);
 
   const btn = document.getElementById("themeToggle");
-  if(btn){
-    btn.addEventListener("click", () => {
-      const current = document.body.getAttribute("data-theme") || "dark";
-      applyTheme(current === "dark" ? "light" : "dark");
-    });
+  if(!btn){
+    console.warn("Theme button not found. Check id='themeToggle' in HTML.");
+    return;
   }
+
+  btn.addEventListener("click", () => {
+    const current = document.body.getAttribute("data-theme") || "dark";
+    applyTheme(current === "dark" ? "light" : "dark");
+  });
 }
 
 // ----------------------------
@@ -204,9 +207,7 @@ function ddmmyyyyToISO(ddmmyyyy){
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
 
-function getExamISO(){
-  return localStorage.getItem(EXAM_DATE_KEY);
-}
+function getExamISO(){ return localStorage.getItem(EXAM_DATE_KEY); }
 
 function setExamISO(iso){
   localStorage.setItem(EXAM_DATE_KEY, iso);
@@ -218,6 +219,7 @@ let countdownInterval = null;
 function updateCountdownDisplay(){
   const iso = getExamISO();
   const el = $("countdownTime");
+  if(!el) return;
 
   if(countdownInterval){
     clearInterval(countdownInterval);
@@ -268,25 +270,29 @@ function promptSetExamDate(){
 let currentSubject = null;
 
 function showHome(){
-  $("subjectScreen").classList.add("hidden");
-  $("homeScreen").classList.remove("hidden");
+  $("subjectScreen")?.classList.add("hidden");
+  $("homeScreen")?.classList.remove("hidden");
   currentSubject = null;
   renderHome();
 }
 
 function openSubject(subj){
   currentSubject = subj;
-  $("homeScreen").classList.add("hidden");
-  $("subjectScreen").classList.remove("hidden");
+  $("homeScreen")?.classList.add("hidden");
+  $("subjectScreen")?.classList.remove("hidden");
   renderSubject();
 }
 
 function renderHome(){
   const state = loadState();
   const overall = overallStats(state);
-  $("overallBelow").innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
+  const overallEl = $("overallBelow");
+  if(overallEl){
+    overallEl.innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
+  }
 
   const grid = $("metersGrid");
+  if(!grid) return;
   grid.innerHTML = "";
 
   for(const subj of Object.keys(SUBJECTS)){
@@ -319,23 +325,25 @@ function renderHome(){
 
     const arc = card.querySelector(`#arc_${id}`);
     const pctEl = card.querySelector(`#pct_${id}`);
-    setRing(arc, pctEl, pct);
+    if(arc && pctEl) setRing(arc, pctEl, pct);
 
-    card.querySelector(".subjectName").addEventListener("click", () => openSubject(subj));
+    card.querySelector(".subjectName")?.addEventListener("click", () => openSubject(subj));
   }
 }
 
 function renderSubject(){
   const state = loadState();
   const subj = currentSubject;
+  if(!subj) return;
 
-  $("subjectTitle").textContent = subj;
+  $("subjectTitle") && ($("subjectTitle").textContent = subj);
 
   const { done, total, pct } = statsFor(state, subj);
-  $("subjectRight").textContent = `${done}/${total} done • ${pct}%`;
-  $("subjectMini").textContent = "";
+  $("subjectRight") && ($("subjectRight").textContent = `${done}/${total} done • ${pct}%`);
+  $("subjectMini") && ($("subjectMini").textContent = "");
 
   const wrap = $("topics");
+  if(!wrap) return;
   wrap.innerHTML = "";
 
   SUBJECTS[subj].forEach((topic, idx) => {
@@ -356,10 +364,13 @@ function renderSubject(){
       saveState(newState);
 
       const s = statsFor(newState, subj);
-      $("subjectRight").textContent = `${s.done}/${s.total} done • ${s.pct}%`;
+      $("subjectRight") && ($("subjectRight").textContent = `${s.done}/${s.total} done • ${s.pct}%`);
 
       const overall = overallStats(newState);
-      $("overallBelow").innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
+      const overallEl = $("overallBelow");
+      if(overallEl){
+        overallEl.innerHTML = `Overall: ${overall.pct}% <span>(${overall.done}/${overall.total})</span>`;
+      }
     });
 
     wrap.appendChild(row);
@@ -367,68 +378,12 @@ function renderSubject(){
 }
 
 // ----------------------------
-// Buttons
+// Study Timer + Alarm
 // ----------------------------
-$("backBtn").addEventListener("click", showHome);
-
-$("markAll").addEventListener("click", () => {
-  if(!currentSubject) return;
-  const state = loadState();
-  state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
-  saveState(state);
-  renderSubject();
-  renderHome();
-});
-
-$("clearAll").addEventListener("click", () => {
-  if(!currentSubject) return;
-  const state = loadState();
-  state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
-  saveState(state);
-  renderSubject();
-  renderHome();
-});
-
-$("resetAll").addEventListener("click", () => {
-  localStorage.removeItem(STORAGE_KEY);
-  if(currentSubject) renderSubject();
-  renderHome();
-});
-
-$("countdownPill").addEventListener("click", promptSetExamDate);
-
-// ----------------------------
-// Init (Home)
-// ----------------------------
-initTheme();              // ✅ added
-loadDailyQuote();
-renderHome();
-updateCountdownDisplay();
-showHome();
-
-
-// ============================
-// ===== Study Timer =====
-// ============================
-const openTimerBtn = document.getElementById("openTimerBtn");
-const closeTimerBtn = document.getElementById("closeTimerBtn");
-const timerModal = document.getElementById("timerModal");
-
-const timerBig = document.getElementById("timerBig");
-const timerMin = document.getElementById("timerMin");
-const timerSec = document.getElementById("timerSec");
-const timerInputs = document.getElementById("timerInputs");
-
-const startTimerBtn = document.getElementById("startTimerBtn");
-const pauseTimerBtn = document.getElementById("pauseTimerBtn");
-const resetTimerBtn = document.getElementById("resetTimerBtn");
-const timerHint = document.getElementById("timerHint");
-
 let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
 
-// Alarm Loop + Popup Control
 let alarmInterval = null;
 let alarmCtx = null;
 
@@ -495,56 +450,60 @@ function hideAlarmPopup(){
   if(overlay) overlay.classList.add("hidden");
 }
 
-const alarmOkBtn = document.getElementById("alarmOkBtn");
-if(alarmOkBtn){
-  alarmOkBtn.addEventListener("click", hideAlarmPopup);
-}
-
 function renderTimer(){
+  const timerBig = document.getElementById("timerBig");
+  if(!timerBig) return;
+
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
   timerBig.textContent = `${pad2(m)}:${pad2(s)}`;
 }
 
 function setButtonsState(){
-  pauseTimerBtn.disabled = !running;
-  resetTimerBtn.disabled = running ? false : (remainingSeconds === 0);
+  const pauseTimerBtn = document.getElementById("pauseTimerBtn");
+  const resetTimerBtn = document.getElementById("resetTimerBtn");
+
+  if(pauseTimerBtn) pauseTimerBtn.disabled = !running;
+  if(resetTimerBtn) resetTimerBtn.disabled = running ? false : (remainingSeconds === 0);
 }
 
 function openTimer(){
-  timerModal.classList.remove("hidden");
-  timerHint.textContent = "Set time and press Start.";
+  const timerModal = document.getElementById("timerModal");
+  const timerHint = document.getElementById("timerHint");
+  if(timerModal) timerModal.classList.remove("hidden");
+  if(timerHint) timerHint.textContent = "Set time and press Start.";
   if(!running) renderTimer();
 }
 
 function closeTimer(){
-  timerModal.classList.add("hidden");
+  const timerModal = document.getElementById("timerModal");
+  if(timerModal) timerModal.classList.add("hidden");
 }
 
-openTimerBtn.addEventListener("click", openTimer);
-closeTimerBtn.addEventListener("click", closeTimer);
-
-timerModal.addEventListener("click", (e) => {
-  if(e.target === timerModal) closeTimer();
-});
-
 function startTimer(){
-  const m = Math.max(0, Number(timerMin.value || 0));
-  const s = Math.min(59, Math.max(0, Number(timerSec.value || 0)));
+  const timerMin = document.getElementById("timerMin");
+  const timerSec = document.getElementById("timerSec");
+  const timerInputs = document.getElementById("timerInputs");
+  const timerHint = document.getElementById("timerHint");
+
+  const m = Math.max(0, Number(timerMin?.value || 0));
+  const s = Math.min(59, Math.max(0, Number(timerSec?.value || 0)));
 
   if(!running && remainingSeconds === 0){
     remainingSeconds = (m * 60) + s;
   }
 
   if(remainingSeconds <= 0){
-    timerHint.textContent = "Please set a time greater than 0.";
+    if(timerHint) timerHint.textContent = "Please set a time greater than 0.";
     return;
   }
 
   running = true;
-  timerInputs.style.opacity = "0.55";
-  timerInputs.style.pointerEvents = "none";
-  timerHint.textContent = "Timer running… Focus!";
+  if(timerInputs){
+    timerInputs.style.opacity = "0.55";
+    timerInputs.style.pointerEvents = "none";
+  }
+  if(timerHint) timerHint.textContent = "Timer running… Focus!";
 
   setButtonsState();
   renderTimer();
@@ -561,13 +520,14 @@ function startTimer(){
       timerInterval = null;
       running = false;
 
-      timerInputs.style.opacity = "1";
-      timerInputs.style.pointerEvents = "auto";
+      if(timerInputs){
+        timerInputs.style.opacity = "1";
+        timerInputs.style.pointerEvents = "auto";
+      }
       setButtonsState();
 
       showAlarmPopup();
-
-      timerHint.textContent = "Time finished. Set again or restart.";
+      if(timerHint) timerHint.textContent = "Time finished. Set again or restart.";
       return;
     }
 
@@ -577,6 +537,10 @@ function startTimer(){
 
 function pauseTimer(){
   if(!running) return;
+
+  const timerInputs = document.getElementById("timerInputs");
+  const timerHint = document.getElementById("timerHint");
+
   running = false;
 
   if(timerInterval){
@@ -584,13 +548,18 @@ function pauseTimer(){
     timerInterval = null;
   }
 
-  timerInputs.style.opacity = "1";
-  timerInputs.style.pointerEvents = "auto";
-  timerHint.textContent = "Paused. Press Start to continue.";
+  if(timerInputs){
+    timerInputs.style.opacity = "1";
+    timerInputs.style.pointerEvents = "auto";
+  }
+  if(timerHint) timerHint.textContent = "Paused. Press Start to continue.";
   setButtonsState();
 }
 
 function resetTimer(){
+  const timerInputs = document.getElementById("timerInputs");
+  const timerHint = document.getElementById("timerHint");
+
   running = false;
 
   if(timerInterval){
@@ -599,26 +568,18 @@ function resetTimer(){
   }
 
   remainingSeconds = 0;
-  timerInputs.style.opacity = "1";
-  timerInputs.style.pointerEvents = "auto";
+  if(timerInputs){
+    timerInputs.style.opacity = "1";
+    timerInputs.style.pointerEvents = "auto";
+  }
   renderTimer();
-  timerHint.textContent = "Reset. Set time and press Start.";
+  if(timerHint) timerHint.textContent = "Reset. Set time and press Start.";
   setButtonsState();
 }
 
-startTimerBtn.addEventListener("click", startTimer);
-pauseTimerBtn.addEventListener("click", pauseTimer);
-resetTimerBtn.addEventListener("click", resetTimer);
-
-renderTimer();
-setButtonsState();
-
-
-// ============================
+// ----------------------------
 // ✅ To-Do List Logic
-// ============================
-const TODO_KEY = "ca_todo_list_v1";
-
+// ----------------------------
 function loadTodos(){
   const raw = localStorage.getItem(TODO_KEY);
   try { return raw ? JSON.parse(raw) : []; }
@@ -656,31 +617,99 @@ function renderTodos(){
   });
 }
 
-const addTodoBtn = document.getElementById("addTodoBtn");
-if(addTodoBtn){
-  addTodoBtn.addEventListener("click", () => {
-    const input = document.getElementById("todoInput");
-    const value = input.value.trim();
-    if(!value) return;
+function bindTodo(){
+  const addTodoBtn = document.getElementById("addTodoBtn");
+  const todoInput = document.getElementById("todoInput");
 
-    const todos = loadTodos();
-    todos.push(value);
-    saveTodos(todos);
+  if(addTodoBtn){
+    addTodoBtn.addEventListener("click", () => {
+      const value = (todoInput?.value || "").trim();
+      if(!value) return;
 
-    input.value = "";
-    renderTodos();
-  });
+      const todos = loadTodos();
+      todos.push(value);
+      saveTodos(todos);
+
+      todoInput.value = "";
+      renderTodos();
+    });
+  }
+
+  if(todoInput){
+    todoInput.addEventListener("keydown", (e) => {
+      if(e.key === "Enter"){
+        addTodoBtn?.click();
+      }
+    });
+  }
 }
 
-// Enter key adds task
-const todoInput = document.getElementById("todoInput");
-if(todoInput){
-  todoInput.addEventListener("keydown", (e) => {
-    if(e.key === "Enter"){
-      document.getElementById("addTodoBtn")?.click();
-    }
-  });
-}
+// ----------------------------
+// ✅ Bind Events after DOM ready
+// ----------------------------
+document.addEventListener("DOMContentLoaded", () => {
+  // Theme
+  initTheme();
 
-// init
-renderTodos();
+  // Quote + UI
+  loadDailyQuote();
+  renderHome();
+  updateCountdownDisplay();
+  showHome();
+
+  // Countdown click
+  $("countdownPill")?.addEventListener("click", promptSetExamDate);
+
+  // Subject screen buttons
+  $("backBtn")?.addEventListener("click", showHome);
+
+  $("markAll")?.addEventListener("click", () => {
+    if(!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("clearAll")?.addEventListener("click", () => {
+    if(!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("resetAll")?.addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    if(currentSubject) renderSubject();
+    renderHome();
+  });
+
+  // Timer bindings
+  document.getElementById("openTimerBtn")?.addEventListener("click", openTimer);
+  document.getElementById("closeTimerBtn")?.addEventListener("click", closeTimer);
+
+  const timerModal = document.getElementById("timerModal");
+  if(timerModal){
+    timerModal.addEventListener("click", (e) => {
+      if(e.target === timerModal) closeTimer();
+    });
+  }
+
+  document.getElementById("startTimerBtn")?.addEventListener("click", startTimer);
+  document.getElementById("pauseTimerBtn")?.addEventListener("click", pauseTimer);
+  document.getElementById("resetTimerBtn")?.addEventListener("click", resetTimer);
+
+  // Alarm OK
+  document.getElementById("alarmOkBtn")?.addEventListener("click", hideAlarmPopup);
+
+  // To-do
+  bindTodo();
+  renderTodos();
+
+  // Timer initial view
+  renderTimer();
+  setButtonsState();
+});
