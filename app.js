@@ -371,3 +371,155 @@ loadDailyQuote();
 renderHome();
 updateCountdownDisplay();
 showHome();
+// ===== Study Timer =====
+const openTimerBtn = document.getElementById("openTimerBtn");
+const closeTimerBtn = document.getElementById("closeTimerBtn");
+const timerModal = document.getElementById("timerModal");
+
+const timerBig = document.getElementById("timerBig");
+const timerMin = document.getElementById("timerMin");
+const timerSec = document.getElementById("timerSec");
+const timerInputs = document.getElementById("timerInputs");
+
+const startTimerBtn = document.getElementById("startTimerBtn");
+const pauseTimerBtn = document.getElementById("pauseTimerBtn");
+const resetTimerBtn = document.getElementById("resetTimerBtn");
+const timerHint = document.getElementById("timerHint");
+
+let timerInterval = null;
+let remainingSeconds = 0;
+let running = false;
+
+// simple beep (no external file)
+function playAlarm(){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "sine";
+    o.frequency.value = 880;
+    o.connect(g);
+    g.connect(ctx.destination);
+    g.gain.value = 0.12;
+    o.start();
+
+    // quick beep pattern
+    setTimeout(()=>{ o.frequency.value = 660; }, 180);
+    setTimeout(()=>{ o.frequency.value = 990; }, 360);
+    setTimeout(()=>{ o.stop(); ctx.close(); }, 700);
+  }catch(e){
+    // fallback
+    alert("Time up!");
+  }
+}
+
+function pad2(n){ return String(n).padStart(2,"0"); }
+
+function renderTimer(){
+  const m = Math.floor(remainingSeconds / 60);
+  const s = remainingSeconds % 60;
+  timerBig.textContent = `${pad2(m)}:${pad2(s)}`;
+}
+
+function setButtonsState(){
+  pauseTimerBtn.disabled = !running;
+  resetTimerBtn.disabled = running ? false : (remainingSeconds === 0);
+}
+
+function openTimer(){
+  timerModal.classList.remove("hidden");
+  timerHint.textContent = "Set time and press Start.";
+  if(!running) renderTimer();
+}
+
+function closeTimer(){
+  timerModal.classList.add("hidden");
+}
+
+openTimerBtn.addEventListener("click", openTimer);
+closeTimerBtn.addEventListener("click", closeTimer);
+
+// close on backdrop click
+timerModal.addEventListener("click", (e)=>{
+  if(e.target === timerModal) closeTimer();
+});
+
+function startTimer(){
+  const m = Math.max(0, Number(timerMin.value || 0));
+  const s = Math.min(59, Math.max(0, Number(timerSec.value || 0)));
+
+  // if starting fresh, take input values
+  if(!running && remainingSeconds === 0){
+    remainingSeconds = (m * 60) + s;
+  }
+
+  if(remainingSeconds <= 0){
+    timerHint.textContent = "Please set a time greater than 0.";
+    return;
+  }
+
+  running = true;
+  timerInputs.style.opacity = "0.55";
+  timerInputs.style.pointerEvents = "none";
+  timerHint.textContent = "Timer running… Focus!";
+
+  setButtonsState();
+  renderTimer();
+
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    remainingSeconds -= 1;
+    if(remainingSeconds <= 0){
+      remainingSeconds = 0;
+      renderTimer();
+      clearInterval(timerInterval);
+      timerInterval = null;
+      running = false;
+
+      timerInputs.style.opacity = "1";
+      timerInputs.style.pointerEvents = "auto";
+      setButtonsState();
+
+      playAlarm();
+      alert("✅ Time’s up! Great job.");
+      timerHint.textContent = "Time finished. Set again or restart.";
+      return;
+    }
+    renderTimer();
+  }, 1000);
+}
+
+function pauseTimer(){
+  if(!running) return;
+  running = false;
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  timerInputs.style.opacity = "1";
+  timerInputs.style.pointerEvents = "auto";
+  timerHint.textContent = "Paused. Press Start to continue.";
+  setButtonsState();
+}
+
+function resetTimer(){
+  running = false;
+  if(timerInterval){
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  remainingSeconds = 0;
+  timerInputs.style.opacity = "1";
+  timerInputs.style.pointerEvents = "auto";
+  renderTimer();
+  timerHint.textContent = "Reset. Set time and press Start.";
+  setButtonsState();
+}
+
+startTimerBtn.addEventListener("click", startTimer);
+pauseTimerBtn.addEventListener("click", pauseTimer);
+resetTimerBtn.addEventListener("click", resetTimer);
+
+// initial state
+renderTimer();
+setButtonsState();
