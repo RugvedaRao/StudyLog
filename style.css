@@ -532,3 +532,75 @@ button.secondary{
 .alarmOk:hover{
   filter: brightness(1.05);
 }
+/* =========================
+   To-Do List (2 columns wide)
+   ========================= */
+.todoCard{
+  margin-top:18px;
+  grid-column: 1 / span 2;   /* 👈 spans 2 subject cards */
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius:18px;
+  padding:16px;
+  min-height:210px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.todoHeader{
+  font-weight:900;
+  font-size:16px;
+}
+
+.todoInputRow{
+  display:flex;
+  gap:10px;
+}
+
+.todoInputRow input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:12px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.22);
+  color:white;
+  font-weight:800;
+  outline:none;
+}
+
+.todoInputRow button{
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:900;
+  cursor:pointer;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  color:#061223;
+}
+
+.todoList{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-top:6px;
+  overflow-y:auto;
+}
+
+.todoItem{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background: rgba(255,255,255,.05);
+  padding:8px 10px;
+  border-radius:10px;
+  font-weight:800;
+}
+
+.todoItem button{
+  background:none;
+  border:none;
+  color:#ff6b6b;
+  font-weight:900;
+  cursor:pointer;
+}
