@@ -522,8 +522,9 @@ function startTimer(){
       timerInputs.style.pointerEvents = "auto";
       setButtonsState();
 
-      playAlarm();
-      alert("✅ Time’s up! Great job.");
+      startAlarmLoop();
+alert("⏰ Time’s up!");
+stopAlarmLoop();
       timerHint.textContent = "Time finished. Set again or restart.";
       return;
     }
