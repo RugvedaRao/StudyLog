@@ -97,6 +97,23 @@
 
     .content{ padding:20px 22px 28px; }
 
+    /* Quote Card */
+    .quoteCard{
+      margin-bottom:18px;
+      padding:18px;
+      border-radius:18px;
+      background: linear-gradient(90deg, rgba(34,197,94,.15), rgba(56,189,248,.15));
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      text-align:center;
+    }
+    .quoteText{
+      font-size:16px;
+      font-weight:800;
+      line-height:1.5;
+      color: rgba(255,255,255,.95);
+    }
+
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
       border: var(--border);
@@ -308,6 +325,11 @@
     </header>
 
     <main class="content">
+      <!-- Quote of the Day -->
+      <div class="quoteCard">
+        <div class="quoteText" id="quoteText">Loading quote...</div>
+      </div>
+
       <!-- HOME SCREEN -->
       <section id="homeScreen">
         <div class="card">
@@ -349,6 +371,29 @@
   </div>
 
   <script>
+    // ----------------------------
+    // Quote of the Day (changes daily)
+    // ----------------------------
+    const QUOTES = [
+      "Discipline is choosing between what you want now and what you want most.",
+      "Success is built on small efforts repeated daily.",
+      "You don’t have to be extreme, just consistent.",
+      "The pain of discipline weighs ounces. The pain of regret weighs tons.",
+      "Study while others sleep. Build while others relax.",
+      "Your future self is watching you right now.",
+      "Focus on progress, not perfection.",
+      "Small daily improvements create massive results.",
+      "Dream big. Work quietly. Stay consistent.",
+      "Every page you study is one step closer."
+    ];
+
+    function loadDailyQuote(){
+      const today = new Date();
+      const dayIndex = Math.floor(today.getTime() / (1000*60*60*24));
+      const quote = QUOTES[dayIndex % QUOTES.length];
+      document.getElementById("quoteText").textContent = quote;
+    }
+
     // ----------------------------
     // DATA (your topics)
     // ----------------------------
@@ -511,7 +556,6 @@
       const iso = getExamISO();
       const el = $("countdownTime");
 
-      // clear old interval so it won't create multiple timers
       if(countdownInterval) {
         clearInterval(countdownInterval);
         countdownInterval = null;
@@ -691,6 +735,8 @@
     // init
     renderHome();
     updateCountdownDisplay();
+    loadDailyQuote();
   </script>
 </body>
 </html>
+
