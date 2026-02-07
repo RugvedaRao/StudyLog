@@ -366,3 +366,7 @@ button.secondary{
   flex-direction: column;
   justify-content: center;
 }
+.meterCard,
+.quickLinks {
+  min-height: 210px;
+}
