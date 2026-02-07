@@ -483,6 +483,18 @@ body[data-theme="light"] .back{
   margin-top:14px;
   flex-wrap:wrap;
 }
+.actions{
+  display:flex;
+  gap:10px;
+  margin-top:14px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+
+.actionsSpacer{
+  flex: 1 1 auto;   /* ✅ takes remaining space */
+}
+
 button{
   border:none;
   border-radius: 10px;
