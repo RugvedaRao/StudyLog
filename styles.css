@@ -370,3 +370,51 @@ button.secondary{
 .quickLinks {
   min-height: 210px;
 }
+/* ===== OVERRIDE: make Quick Links same size as a subject card (e.g., Business Economics) ===== */
+
+/* Cancel old bottomRow layout (the 1fr 360px one) */
+.bottomRow{
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap:14px !important;            /* same gap as metersGrid */
+  align-items: stretch !important;
+}
+
+/* Make the empty left area span 3 columns */
+.bottomLeft{
+  grid-column: 1 / span 3 !important;
+}
+
+/* Put Quick Links in the 4th column (same width as a subject card) */
+.quickLinksCard{
+  grid-column: 4 !important;
+  width: 100% !important;
+  min-height: 210px !important;  /* same “card height feel” as subject boxes */
+  padding:14px 12px 12px !important;
+  border-radius:18px !important;
+
+  /* Match the subject card styling */
+  background: rgba(0,0,0,.18) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: none !important;
+}
+
+/* Make the links fit nicely in the smaller box */
+.quickLink{
+  padding:10px 12px !important;
+  border-radius:12px !important;
+}
+
+/* Responsive: on smaller screens keep it full width */
+@media (max-width: 980px){
+  .bottomRow{
+    grid-template-columns: 1fr !important;
+  }
+  .bottomLeft{
+    grid-column: auto !important;
+    display: none !important; /* hide empty block on mobile */
+  }
+  .quickLinksCard{
+    grid-column: auto !important;
+    min-height: unset !important;
+  }
+}
