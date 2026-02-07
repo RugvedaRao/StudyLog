@@ -391,35 +391,64 @@ let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
 
-function playAlarm(){
+let alarmInterval = null;
+let alarmCtx = null;
+
+function startAlarmLoop(){
   try{
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    alarmCtx = new AudioCtx();
+    alarmCtx.resume?.();
 
-    const beepDuration = 0.10;  // seconds (length of each beep)
-    const gap = 0.20;           // seconds between beeps
-    const beeps = 4;
-    const startAt = ctx.currentTime + 0.02;
+    const beepDuration = 0.10; // length of each beep
+    const gap = 0.10;          // 0.1 second gap
+    const patternLength = 4;   // 4 beeps per cycle
 
-    for(let i = 0; i < beeps; i++){
-      const t0 = startAt + i * (beepDuration + gap);
+    function playPattern(){
+      const startAt = alarmCtx.currentTime + 0.02;
 
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
+      for(let i = 0; i < patternLength; i++){
+        const t0 = startAt + i * (beepDuration + gap);
 
-      o.type = "sine";
-      o.frequency.value = 880;     // tone (Hz)
-      g.gain.setValueAtTime(0.0, t0);
-      g.gain.linearRampToValueAtTime(0.12, t0 + 0.01);              // fade in
-      g.gain.setValueAtTime(0.12, t0 + beepDuration - 0.02);        // hold
-      g.gain.linearRampToValueAtTime(0.0, t0 + beepDuration);       // fade out
+        const osc = alarmCtx.createOscillator();
+        const gain = alarmCtx.createGain();
 
-      o.connect(g);
-      g.connect(ctx.destination);
+        osc.type = "square";      // sharper beep
+        osc.frequency.value = 900;
 
-      o.start(t0);
-      o.stop(t0 + beepDuration);
+        gain.gain.setValueAtTime(0, t0);
+        gain.gain.linearRampToValueAtTime(0.15, t0 + 0.01);
+        gain.gain.setValueAtTime(0.15, t0 + beepDuration - 0.02);
+        gain.gain.linearRampToValueAtTime(0, t0 + beepDuration);
+
+        osc.connect(gain);
+        gain.connect(alarmCtx.destination);
+
+        osc.start(t0);
+        osc.stop(t0 + beepDuration);
+      }
     }
 
+    playPattern();
+
+    const cycleTime = patternLength * (beepDuration + gap);
+    alarmInterval = setInterval(playPattern, cycleTime * 1000);
+
+  }catch(e){
+    console.warn(e);
+  }
+}
+
+function stopAlarmLoop(){
+  if(alarmInterval){
+    clearInterval(alarmInterval);
+    alarmInterval = null;
+  }
+  if(alarmCtx){
+    alarmCtx.close();
+    alarmCtx = null;
+  }
+}
     // close audio context after the pattern finishes
     const totalTime = beeps * beepDuration + (beeps - 1) * gap + 0.2;
     setTimeout(() => ctx.close(), totalTime * 1000);
