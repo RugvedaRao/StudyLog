@@ -394,23 +394,40 @@ let running = false;
 function playAlarm(){
   try{
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.type = "sine";
-    o.frequency.value = 880;
-    o.connect(g);
-    g.connect(ctx.destination);
-    g.gain.value = 0.12;
-    o.start();
 
-    setTimeout(()=>{ o.frequency.value = 660; }, 180);
-    setTimeout(()=>{ o.frequency.value = 990; }, 360);
-    setTimeout(()=>{ o.stop(); ctx.close(); }, 700);
+    const beepDuration = 0.10;  // seconds (length of each beep)
+    const gap = 0.20;           // seconds between beeps
+    const beeps = 4;
+    const startAt = ctx.currentTime + 0.02;
+
+    for(let i = 0; i < beeps; i++){
+      const t0 = startAt + i * (beepDuration + gap);
+
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+
+      o.type = "sine";
+      o.frequency.value = 880;     // tone (Hz)
+      g.gain.setValueAtTime(0.0, t0);
+      g.gain.linearRampToValueAtTime(0.12, t0 + 0.01);              // fade in
+      g.gain.setValueAtTime(0.12, t0 + beepDuration - 0.02);        // hold
+      g.gain.linearRampToValueAtTime(0.0, t0 + beepDuration);       // fade out
+
+      o.connect(g);
+      g.connect(ctx.destination);
+
+      o.start(t0);
+      o.stop(t0 + beepDuration);
+    }
+
+    // close audio context after the pattern finishes
+    const totalTime = beeps * beepDuration + (beeps - 1) * gap + 0.2;
+    setTimeout(() => ctx.close(), totalTime * 1000);
+
   }catch(e){
     alert("Time up!");
   }
 }
-
 function renderTimer(){
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
