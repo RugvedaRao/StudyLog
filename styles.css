@@ -349,3 +349,20 @@ button.secondary{
   .ring{ width:128px; height:128px; }
   .ring .pct{ font-size:24px; }
 }
+/* CANCEL old Quick Links sizing */
+.quickLinks {
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+}
+/* MAKE QUICK LINKS SAME SIZE AS SUBJECT CARD */
+.quickLinks {
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 18px;
+  padding: 18px;
+  min-height: 190px; /* matches subject card height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
