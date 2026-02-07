@@ -39,6 +39,41 @@
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
+<!-- Study Timer CTA -->
+<div class="timerCTAwrap">
+  <button class="timerCTA" id="openTimerBtn">Set Study Timer</button>
+</div>
+
+<!-- Study Timer Modal -->
+<div class="timerModal hidden" id="timerModal">
+  <div class="timerPanel">
+    <div class="timerTop">
+      <div class="timerTitle">Study Timer</div>
+      <button class="timerClose" id="closeTimerBtn">✕</button>
+    </div>
+
+    <div class="timerBig" id="timerBig">00:00</div>
+
+    <div class="timerInputs" id="timerInputs">
+      <div class="timerField">
+        <label>Minutes</label>
+        <input type="number" id="timerMin" min="0" max="999" value="5"/>
+      </div>
+      <div class="timerField">
+        <label>Seconds</label>
+        <input type="number" id="timerSec" min="0" max="59" value="0"/>
+      </div>
+    </div>
+
+    <div class="timerBtns">
+      <button class="timerBtn" id="startTimerBtn">Start</button>
+      <button class="timerBtn secondary" id="pauseTimerBtn" disabled>Pause</button>
+      <button class="timerBtn secondary" id="resetTimerBtn" disabled>Reset</button>
+    </div>
+
+    <div class="timerHint" id="timerHint">Set time and press Start.</div>
+  </div>
+</div>
 
           <!-- Bottom row: empty left + large Quick Links right -->
           <div class="bottomRow">
