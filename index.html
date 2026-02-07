@@ -200,6 +200,44 @@
       font-size:13px;
     }
 
+    /* Quick Links */
+    .quickLinksWrapper{
+      display:flex;
+      justify-content:flex-end;
+      margin-top:18px;
+    }
+    .quickLinksCard{
+      width:280px;
+      padding:16px;
+      border-radius:16px;
+      background: rgba(0,0,0,.20);
+      border: 1px solid rgba(255,255,255,.12);
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .quickTitle{
+      font-weight:900;
+      font-size:15px;
+      margin-bottom:6px;
+      color: rgba(255,255,255,.95);
+    }
+    .quickLink{
+      text-decoration:none;
+      font-weight:800;
+      font-size:14px;
+      color: var(--accent);
+      padding:8px 10px;
+      border-radius:10px;
+      background: rgba(56,189,248,.08);
+      transition: all .2s ease;
+    }
+    .quickLink:hover{
+      background: rgba(56,189,248,.18);
+      transform: translateX(4px);
+    }
+
     /* Subject screen list */
     .topbar{
       display:flex;
@@ -305,6 +343,7 @@
       .metersGrid{ grid-template-columns: 1fr; }
       .ring{ width:128px; height:128px; }
       .ring .pct{ font-size:24px; }
+      .quickLinksCard{ width:100%; }
     }
   </style>
 </head>
@@ -341,6 +380,25 @@
 
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
+          </div>
+
+          <!-- Quick Links (right aligned, below overall) -->
+          <div class="quickLinksWrapper">
+            <div class="quickLinksCard">
+              <div class="quickTitle">Quick Links</div>
+
+              <a class="quickLink" href="https://www.icai.org/post/foundation-nset" target="_blank" rel="noopener noreferrer">
+                ICAI Study Material
+              </a>
+
+              <a class="quickLink" href="https://www.icai.org/post/rtp-foundation-course" target="_blank" rel="noopener noreferrer">
+                RTP
+              </a>
+
+              <a class="quickLink" href="https://resource.cdn.icai.org/84774bos68243.pdf" target="_blank" rel="noopener noreferrer">
+                MTP
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -739,4 +797,3 @@
   </script>
 </body>
 </html>
-
