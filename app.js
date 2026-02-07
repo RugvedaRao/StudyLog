@@ -652,7 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
 
-  // ✅ Done button -> Home
+  // ✅ Done button -> Home (works with floating button too)
   document.getElementById("doneBtn")?.addEventListener("click", showHome);
 
   // Quote + UI
@@ -717,4 +717,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderTimer();
   setButtonsState();
 });
+
 
