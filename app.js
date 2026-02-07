@@ -571,3 +571,46 @@ resetTimerBtn.addEventListener("click", resetTimer);
 // initial state
 renderTimer();
 setButtonsState();
+/* Alarm Popup */
+.alarmOverlay{
+  position:fixed;
+  inset:0;
+  background: rgba(0,0,0,.65);
+  backdrop-filter: blur(10px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:10000;
+  padding:18px;
+}
+.alarmBox{
+  width:min(420px, 100%);
+  border-radius:18px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+  box-shadow: 0 20px 60px rgba(0,0,0,.55);
+  padding:18px;
+  text-align:center;
+}
+.alarmTitle{
+  font-weight:1000;
+  font-size:20px;
+  margin-bottom:8px;
+}
+.alarmMsg{
+  color: rgba(255,255,255,.85);
+  font-weight:800;
+  font-size:14px;
+  margin-bottom:14px;
+}
+.alarmOk{
+  width:100%;
+  border:none;
+  border-radius:14px;
+  padding:12px 16px;
+  font-weight:900;
+  font-size:14px;
+  cursor:pointer;
+  color:#061223;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+}
