@@ -490,10 +490,9 @@ button.secondary{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:10000;
+  z-index:999999;   /* 👈 change */
   padding:18px;
 }
-
 .alarmBox{
   width:min(420px, 100%);
   border-radius:18px;
