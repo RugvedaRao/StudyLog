@@ -1,3 +1,7 @@
+// ============================
+// CA Foundation Tracker - app.js
+// ============================
+
 // ----------------------------
 // Quote of the Day (changes daily)
 // ----------------------------
@@ -16,7 +20,7 @@ const QUOTES = [
 
 function loadDailyQuote(){
   const today = new Date();
-  const dayIndex = Math.floor(today.getTime() / (1000*60*60*24));
+  const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
   const quote = QUOTES[dayIndex % QUOTES.length];
   document.getElementById("quoteText").textContent = quote;
 }
@@ -118,7 +122,7 @@ function statsFor(state, subj){
   const arr = state[subj] || [];
   const done = arr.filter(Boolean).length;
   const total = arr.length;
-  const pct = total === 0 ? 0 : Math.round((done/total)*100);
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return { done, total, pct };
 }
 
@@ -129,13 +133,13 @@ function overallStats(state){
     done += s.done;
     total += s.total;
   }
-  const pct = total === 0 ? 0 : Math.round((done/total)*100);
+  const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return { done, total, pct };
 }
 
 function setRing(arcEl, pctEl, pct){
   const C = 282.74; // circumference r=45
-  arcEl.style.strokeDashoffset = String(C - (pct/100) * C);
+  arcEl.style.strokeDashoffset = String(C - (pct / 100) * C);
   pctEl.textContent = `${pct}%`;
 }
 
@@ -146,7 +150,7 @@ function cssId(name){
 // ----------------------------
 // Countdown (DD-MM-YYYY input stored as ISO)
 // ----------------------------
-function pad2(n){ return String(n).padStart(2,"0"); }
+function pad2(n){ return String(n).padStart(2, "0"); }
 
 function isoToDDMMYYYY(iso){
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
@@ -163,7 +167,7 @@ function ddmmyyyyToISO(ddmmyyyy){
 
   const d = new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
   if(Number.isNaN(d.getTime())) return null;
-  if(d.getFullYear() !== yyyy || (d.getMonth()+1) !== mm || d.getDate() !== dd) return null;
+  if(d.getFullYear() !== yyyy || (d.getMonth() + 1) !== mm || d.getDate() !== dd) return null;
 
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
@@ -199,11 +203,11 @@ function updateCountdownDisplay(){
     let diff = target - now;
     if(diff < 0) diff = 0;
 
-    const totalSec = Math.floor(diff/1000);
-    const days = Math.floor(totalSec/86400);
-    const hours = Math.floor((totalSec%86400)/3600);
-    const mins = Math.floor((totalSec%3600)/60);
-    const secs = totalSec%60;
+    const totalSec = Math.floor(diff / 1000);
+    const days = Math.floor(totalSec / 86400);
+    const hours = Math.floor((totalSec % 86400) / 3600);
+    const mins = Math.floor((totalSec % 3600) / 60);
+    const secs = totalSec % 60;
 
     el.textContent = `${days}d ${pad2(hours)}:${pad2(mins)}:${pad2(secs)}`;
   }
@@ -254,7 +258,7 @@ function renderHome(){
   grid.innerHTML = "";
 
   for(const subj of Object.keys(SUBJECTS)){
-    const {done, total, pct} = statsFor(state, subj);
+    const { done, total, pct } = statsFor(state, subj);
     const id = cssId(subj);
 
     const card = document.createElement("div");
@@ -295,7 +299,7 @@ function renderSubject(){
 
   $("subjectTitle").textContent = subj;
 
-  const {done,total,pct} = statsFor(state, subj);
+  const { done, total, pct } = statsFor(state, subj);
   $("subjectRight").textContent = `${done}/${total} done • ${pct}%`;
   $("subjectMini").textContent = "";
 
@@ -391,52 +395,51 @@ let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
 
+// ============================
+// ✅ Alarm Loop + Popup Control
+// (requires alarmOverlay + alarmOkBtn in index.html)
+// ============================
 let alarmInterval = null;
 let alarmCtx = null;
 
 function startAlarmLoop(){
-  try{
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    alarmCtx = new AudioCtx();
-    alarmCtx.resume?.();
+  stopAlarmLoop(); // prevent stacking
 
-    const beepDuration = 0.10; // length of each beep
-    const gap = 0.10;          // 0.1 second gap
-    const patternLength = 4;   // 4 beeps per cycle
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  alarmCtx = new AudioCtx();
+  alarmCtx.resume?.();
 
-    function playPattern(){
-      const startAt = alarmCtx.currentTime + 0.02;
+  const beepDuration = 0.08; // beep length
+  const gap = 0.10;          // ✅ 0.1s gap
+  const beepsPerCycle = 4;
 
-      for(let i = 0; i < patternLength; i++){
-        const t0 = startAt + i * (beepDuration + gap);
+  function playPattern(){
+    const startAt = alarmCtx.currentTime + 0.02;
 
-        const osc = alarmCtx.createOscillator();
-        const gain = alarmCtx.createGain();
+    for(let i = 0; i < beepsPerCycle; i++){
+      const t0 = startAt + i * (beepDuration + gap);
 
-        osc.type = "square";      // sharper beep
-        osc.frequency.value = 900;
+      const osc = alarmCtx.createOscillator();
+      const gain = alarmCtx.createGain();
 
-        gain.gain.setValueAtTime(0, t0);
-        gain.gain.linearRampToValueAtTime(0.15, t0 + 0.01);
-        gain.gain.setValueAtTime(0.15, t0 + beepDuration - 0.02);
-        gain.gain.linearRampToValueAtTime(0, t0 + beepDuration);
+      osc.type = "square";
+      osc.frequency.value = 900;
 
-        osc.connect(gain);
-        gain.connect(alarmCtx.destination);
+      gain.gain.setValueAtTime(0, t0);
+      gain.gain.linearRampToValueAtTime(0.16, t0 + 0.01);
+      gain.gain.linearRampToValueAtTime(0, t0 + beepDuration);
 
-        osc.start(t0);
-        osc.stop(t0 + beepDuration);
-      }
+      osc.connect(gain);
+      gain.connect(alarmCtx.destination);
+
+      osc.start(t0);
+      osc.stop(t0 + beepDuration);
     }
-
-    playPattern();
-
-    const cycleTime = patternLength * (beepDuration + gap);
-    alarmInterval = setInterval(playPattern, cycleTime * 1000);
-
-  }catch(e){
-    console.warn(e);
   }
+
+  playPattern();
+  const cycleMs = beepsPerCycle * (beepDuration + gap) * 1000;
+  alarmInterval = setInterval(playPattern, cycleMs);
 }
 
 function stopAlarmLoop(){
@@ -449,14 +452,28 @@ function stopAlarmLoop(){
     alarmCtx = null;
   }
 }
-    // close audio context after the pattern finishes
-    const totalTime = beeps * beepDuration + (beeps - 1) * gap + 0.2;
-    setTimeout(() => ctx.close(), totalTime * 1000);
 
-  }catch(e){
-    alert("Time up!");
-  }
+function showAlarmPopup(){
+  const overlay = document.getElementById("alarmOverlay");
+  if(overlay) overlay.classList.remove("hidden");
+  startAlarmLoop();
 }
+
+function hideAlarmPopup(){
+  stopAlarmLoop();
+  const overlay = document.getElementById("alarmOverlay");
+  if(overlay) overlay.classList.add("hidden");
+}
+
+// bind OK button (if present)
+const alarmOkBtn = document.getElementById("alarmOkBtn");
+if(alarmOkBtn){
+  alarmOkBtn.addEventListener("click", hideAlarmPopup);
+}
+
+// ----------------------------
+// Timer UI
+// ----------------------------
 function renderTimer(){
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
@@ -481,7 +498,7 @@ function closeTimer(){
 openTimerBtn.addEventListener("click", openTimer);
 closeTimerBtn.addEventListener("click", closeTimer);
 
-timerModal.addEventListener("click", (e)=>{
+timerModal.addEventListener("click", (e) => {
   if(e.target === timerModal) closeTimer();
 });
 
@@ -507,7 +524,7 @@ function startTimer(){
   renderTimer();
 
   if(timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(()=>{
+  timerInterval = setInterval(() => {
     remainingSeconds -= 1;
 
     if(remainingSeconds <= 0){
@@ -522,9 +539,9 @@ function startTimer(){
       timerInputs.style.pointerEvents = "auto";
       setButtonsState();
 
-      startAlarmLoop();
-alert("⏰ Time’s up!");
-stopAlarmLoop();
+      // ✅ show popup + loop beeps until OK
+      showAlarmPopup();
+
       timerHint.textContent = "Time finished. Set again or restart.";
       return;
     }
@@ -571,46 +588,3 @@ resetTimerBtn.addEventListener("click", resetTimer);
 // initial state
 renderTimer();
 setButtonsState();
-/* Alarm Popup */
-.alarmOverlay{
-  position:fixed;
-  inset:0;
-  background: rgba(0,0,0,.65);
-  backdrop-filter: blur(10px);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:10000;
-  padding:18px;
-}
-.alarmBox{
-  width:min(420px, 100%);
-  border-radius:18px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
-  box-shadow: 0 20px 60px rgba(0,0,0,.55);
-  padding:18px;
-  text-align:center;
-}
-.alarmTitle{
-  font-weight:1000;
-  font-size:20px;
-  margin-bottom:8px;
-}
-.alarmMsg{
-  color: rgba(255,255,255,.85);
-  font-weight:800;
-  font-size:14px;
-  margin-bottom:14px;
-}
-.alarmOk{
-  width:100%;
-  border:none;
-  border-radius:14px;
-  padding:12px 16px;
-  font-weight:900;
-  font-size:14px;
-  cursor:pointer;
-  color:#061223;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-}
