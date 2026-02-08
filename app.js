@@ -1,6 +1,6 @@
 // ============================
 // CA Foundation Tracker - app.js
-// (FULL - with Theme Toggle + Done button + Timer + ToDo)
+// (FULL - with Theme Toggle + Done button + Timer + ToDo + User Capture)
 // ============================
 
 // ----------------------------
@@ -90,8 +90,104 @@ const EXAM_DATE_KEY = "ca_exam_date_v3";
 const TODO_KEY = "ca_todo_list_v1";
 const THEME_KEY = "ca_theme_v1";
 
+// ✅ NEW: user capture
+const USER_KEY = "ca_user_v1";
+
+// ✅ Choose ONE endpoint:
+// Formspree:
+// const LEAD_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
+// Google Apps Script:
+const LEAD_ENDPOINT = "YOUR_APPS_SCRIPT_WEBAPP_URL";
+
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
+
+// ============================
+// ✅ NEW: User Capture (Name + Email)
+// Requires these HTML ids:
+// userModal, userForm, userName, userEmail, userMsg
+// ============================
+function loadUser(){
+  const raw = localStorage.getItem(USER_KEY);
+  return raw ? safeParse(raw) : null;
+}
+
+function saveUser(user){
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+function isValidEmail(email){
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function sendLeadToServer(user){
+  if(!LEAD_ENDPOINT || LEAD_ENDPOINT.includes("YOUR_")) return;
+
+  try{
+    await fetch(LEAD_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        source: "CA Foundation Tracker",
+        ts: new Date().toISOString()
+      })
+    });
+  }catch(err){
+    console.warn("Lead submit failed:", err);
+  }
+}
+
+function openUserCapture(){
+  const modal = document.getElementById("userModal");
+  if(modal) modal.classList.remove("hidden");
+}
+
+function closeUserCapture(){
+  const modal = document.getElementById("userModal");
+  if(modal) modal.classList.add("hidden");
+}
+
+function bindUserCapture(){
+  const form = document.getElementById("userForm");
+  const nameEl = document.getElementById("userName");
+  const emailEl = document.getElementById("userEmail");
+  const msgEl = document.getElementById("userMsg");
+
+  if(!form) return;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const name = (nameEl?.value || "").trim();
+    const email = (emailEl?.value || "").trim();
+
+    if(!name){
+      if(msgEl) msgEl.textContent = "Please enter your name.";
+      return;
+    }
+    if(!isValidEmail(email)){
+      if(msgEl) msgEl.textContent = "Please enter a valid email.";
+      return;
+    }
+
+    const user = { name, email };
+    saveUser(user);
+
+    if(msgEl) msgEl.textContent = "Saved ✅";
+    closeUserCapture();
+
+    // fire-and-forget send
+    sendLeadToServer(user);
+  });
+}
+
+function initUserCapture(){
+  bindUserCapture();
+  const user = loadUser();
+  if(!user) openUserCapture();
+}
 
 // ============================
 // ✅ Theme Toggle (Dark/Light)
@@ -582,13 +678,13 @@ function resetTimer(){
 // ✅ To-Do List Logic
 // ----------------------------
 function loadTodos(){
-  const raw = localStorage.getItem("ca_todo_list_v1");
+  const raw = localStorage.getItem(TODO_KEY);
   try { return raw ? JSON.parse(raw) : []; }
   catch { return []; }
 }
 
 function saveTodos(todos){
-  localStorage.setItem("ca_todo_list_v1", JSON.stringify(todos));
+  localStorage.setItem(TODO_KEY, JSON.stringify(todos));
 }
 
 function renderTodos(){
@@ -651,6 +747,9 @@ function bindTodo(){
 document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
+
+  // ✅ NEW: User capture (Name + Email)
+  initUserCapture();
 
   // ✅ Done button -> Home (inline right)
   document.getElementById("doneBtn")?.addEventListener("click", showHome);
