@@ -1,11 +1,10 @@
 // ============================
-// CA Foundation Tracker + Shareable Study Rooms (Firestore)
-// app.js (FULL)
+// CA Foundation Tracker + Shareable Study Rooms (FULL)
 // ============================
 
-/* ----------------------------
-   Quote of the Day (changes daily)
----------------------------- */
+// ----------------------------
+// Quote of the Day
+// ----------------------------
 const QUOTES = [
   "Discipline is choosing between what you want now and what you want most.",
   "Success is built on small efforts repeated daily.",
@@ -27,9 +26,9 @@ function loadDailyQuote(){
   if(el) el.textContent = quote;
 }
 
-/* ----------------------------
-   DATA (topics)
----------------------------- */
+// ----------------------------
+// DATA (topics)
+// ----------------------------
 const SUBJECTS = {
   "Accounting": [
     "Theoretical Framework",
@@ -91,15 +90,12 @@ const TODO_KEY = "ca_todo_list_v1";
 const THEME_KEY = "ca_theme_v1";
 const USER_KEY = "ca_user_v1";
 
-// Optional: Google Apps Script lead capture (keep if you want)
-const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbxvAy_BvXUTcOknFET8ppT6N1r0_eRmcNlCt_KJEijRPsw_ldxsmKycW_nwvxVSc-faTA/exec";
-
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
 
-/* ============================
-   ✅ User Capture (Name + Email)
-============================ */
+// ----------------------------
+// User capture
+// ----------------------------
 function loadUser(){
   const raw = localStorage.getItem(USER_KEY);
   return raw ? safeParse(raw) : null;
@@ -110,30 +106,8 @@ function saveUser(user){
 function isValidEmail(email){
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
-async function sendLeadToServer(user){
-  if(!LEAD_ENDPOINT || LEAD_ENDPOINT.includes("YOUR_")) return;
-  const fd = new FormData();
-  fd.append("name", user.name);
-  fd.append("email", user.email);
-  fd.append("source", "CA Foundation Tracker");
-  fd.append("page", location.href);
-
-  try{
-    await fetch(LEAD_ENDPOINT, { method: "POST", body: fd });
-  }catch(err){
-    console.warn("Lead submit failed:", err);
-  }
-}
-
-function openUserCapture(){
-  const modal = $("userModal");
-  if(modal) modal.classList.remove("hidden");
-}
-function closeUserCapture(){
-  const modal = $("userModal");
-  if(modal) modal.classList.add("hidden");
-}
+function openUserCapture(){ $("userModal")?.classList.remove("hidden"); }
+function closeUserCapture(){ $("userModal")?.classList.add("hidden"); }
 
 function bindUserCapture(){
   const form = $("userForm");
@@ -142,9 +116,8 @@ function bindUserCapture(){
   const msgEl = $("userMsg");
   if(!form) return;
 
-  form.addEventListener("submit", async (e) => {
+  form.addEventListener("submit", (e) => {
     e.preventDefault();
-
     const name = (nameEl?.value || "").trim();
     const email = (emailEl?.value || "").trim();
 
@@ -157,54 +130,44 @@ function bindUserCapture(){
       return;
     }
 
-    const user = { name, email };
-    saveUser(user);
-
+    saveUser({ name, email });
     if(msgEl) msgEl.textContent = "Saved ✅";
     closeUserCapture();
-
-    sendLeadToServer(user);
   });
 }
 
 function initUserCapture(){
   bindUserCapture();
-  const user = loadUser();
-  if(!user) openUserCapture();
+  if(!loadUser()) openUserCapture();
 }
 
-/* ============================
-   ✅ Theme Toggle
-============================ */
+// ----------------------------
+// Theme
+// ----------------------------
 function applyTheme(theme){
   document.body.setAttribute("data-theme", theme);
 
   const icon = $("themeIcon");
   const text = $("themeText");
-
   if(icon) icon.textContent = (theme === "light") ? "☀️" : "🌙";
   if(text) text.textContent = (theme === "light") ? "Light" : "Dark";
 
   localStorage.setItem(THEME_KEY, theme);
 }
-
 function initTheme(){
   const saved = localStorage.getItem(THEME_KEY);
   const theme = (saved === "light" || saved === "dark") ? saved : "dark";
   applyTheme(theme);
 
-  const btn = $("themeToggle");
-  if(!btn) return;
-
-  btn.addEventListener("click", () => {
+  $("themeToggle")?.addEventListener("click", () => {
     const current = document.body.getAttribute("data-theme") || "dark";
     applyTheme(current === "dark" ? "light" : "dark");
   });
 }
 
-/* ----------------------------
-   Progress state (localStorage)
----------------------------- */
+// ----------------------------
+// Progress localStorage
+// ----------------------------
 function defaultState(){
   const st = {};
   for(const subj of Object.keys(SUBJECTS)){
@@ -212,12 +175,10 @@ function defaultState(){
   }
   return st;
 }
-
 function loadState(){
   const raw = localStorage.getItem(STORAGE_KEY);
   const parsed = raw ? safeParse(raw) : null;
   const base = defaultState();
-
   if(!parsed || typeof parsed !== "object") return base;
 
   for(const subj of Object.keys(base)){
@@ -226,11 +187,9 @@ function loadState(){
   }
   return base;
 }
-
 function saveState(state){
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
-
 function statsFor(state, subj){
   const arr = state[subj] || [];
   const done = arr.filter(Boolean).length;
@@ -238,7 +197,6 @@ function statsFor(state, subj){
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return { done, total, pct };
 }
-
 function overallStats(state){
   let done = 0, total = 0;
   for(const subj of Object.keys(SUBJECTS)){
@@ -249,20 +207,18 @@ function overallStats(state){
   const pct = total === 0 ? 0 : Math.round((done / total) * 100);
   return { done, total, pct };
 }
-
 function setRing(arcEl, pctEl, pct){
   const C = 282.74;
   arcEl.style.strokeDashoffset = String(C - (pct / 100) * C);
   pctEl.textContent = `${pct}%`;
 }
-
 function cssId(name){
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "_");
 }
 
-/* ----------------------------
-   Countdown (DD-MM-YYYY input stored as ISO)
----------------------------- */
+// ----------------------------
+// Countdown
+// ----------------------------
 function pad2(n){ return String(n).padStart(2, "0"); }
 
 function isoToDDMMYYYY(iso){
@@ -270,7 +226,6 @@ function isoToDDMMYYYY(iso){
   if(!m) return "";
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
-
 function ddmmyyyyToISO(ddmmyyyy){
   const m = /^(\d{2})-(\d{2})-(\d{4})$/.exec(ddmmyyyy);
   if(!m) return null;
@@ -284,7 +239,6 @@ function ddmmyyyyToISO(ddmmyyyy){
 
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
-
 function getExamISO(){ return localStorage.getItem(EXAM_DATE_KEY); }
 function setExamISO(iso){
   localStorage.setItem(EXAM_DATE_KEY, iso);
@@ -341,9 +295,9 @@ function promptSetExamDate(){
   setExamISO(newISO);
 }
 
-/* ----------------------------
-   Navigation + UI
----------------------------- */
+// ----------------------------
+// Navigation
+// ----------------------------
 let currentSubject = null;
 
 function showHome(){
@@ -352,7 +306,6 @@ function showHome(){
   currentSubject = null;
   renderHome();
 }
-
 function openSubject(subj){
   currentSubject = subj;
   $("homeScreen")?.classList.add("hidden");
@@ -417,7 +370,6 @@ function renderSubject(){
 
   const { done, total, pct } = statsFor(state, subj);
   $("subjectRight") && ($("subjectRight").textContent = `${done}/${total} done • ${pct}%`);
-  $("subjectMini") && ($("subjectMini").textContent = "");
 
   const wrap = $("topics");
   if(!wrap) return;
@@ -454,19 +406,17 @@ function renderSubject(){
   });
 }
 
-/* ----------------------------
-   Study Timer + Alarm
----------------------------- */
+// ----------------------------
+// Timer + Alarm
+// ----------------------------
 let timerInterval = null;
 let remainingSeconds = 0;
 let running = false;
-
 let alarmInterval = null;
 let alarmCtx = null;
 
 function startAlarmLoop(){
   stopAlarmLoop();
-
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   alarmCtx = new AudioCtx();
   alarmCtx.resume?.();
@@ -477,10 +427,8 @@ function startAlarmLoop(){
 
   function playPattern(){
     const startAt = alarmCtx.currentTime + 0.02;
-
     for(let i = 0; i < beepsPerCycle; i++){
       const t0 = startAt + i * (beepDuration + gap);
-
       const osc = alarmCtx.createOscillator();
       const gain = alarmCtx.createGain();
 
@@ -493,7 +441,6 @@ function startAlarmLoop(){
 
       osc.connect(gain);
       gain.connect(alarmCtx.destination);
-
       osc.start(t0);
       osc.stop(t0 + beepDuration);
     }
@@ -503,170 +450,97 @@ function startAlarmLoop(){
   const cycleMs = beepsPerCycle * (beepDuration + gap) * 1000;
   alarmInterval = setInterval(playPattern, cycleMs);
 }
-
 function stopAlarmLoop(){
-  if(alarmInterval){
-    clearInterval(alarmInterval);
-    alarmInterval = null;
-  }
-  if(alarmCtx){
-    alarmCtx.close();
-    alarmCtx = null;
-  }
+  if(alarmInterval){ clearInterval(alarmInterval); alarmInterval = null; }
+  if(alarmCtx){ alarmCtx.close(); alarmCtx = null; }
 }
-
 function showAlarmPopup(){
-  const overlay = $("alarmOverlay");
-  if(overlay) overlay.classList.remove("hidden");
+  $("alarmOverlay")?.classList.remove("hidden");
   startAlarmLoop();
 }
-
 function hideAlarmPopup(){
   stopAlarmLoop();
-  const overlay = $("alarmOverlay");
-  if(overlay) overlay.classList.add("hidden");
+  $("alarmOverlay")?.classList.add("hidden");
 }
-
 function renderTimer(){
   const timerBig = $("timerBig");
   if(!timerBig) return;
-
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
   timerBig.textContent = `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
 }
-
 function setButtonsState(){
-  const pauseTimerBtn = $("pauseTimerBtn");
-  const resetTimerBtn = $("resetTimerBtn");
-
-  if(pauseTimerBtn) pauseTimerBtn.disabled = !running;
-  if(resetTimerBtn) resetTimerBtn.disabled = running ? false : (remainingSeconds === 0);
+  $("pauseTimerBtn") && ($("pauseTimerBtn").disabled = !running);
+  $("resetTimerBtn") && ($("resetTimerBtn").disabled = running ? false : (remainingSeconds === 0));
 }
-
-function openTimer(){
-  const timerModal = $("timerModal");
-  const timerHint = $("timerHint");
-  if(timerModal) timerModal.classList.remove("hidden");
-  if(timerHint) timerHint.textContent = "Set time and press Start.";
-  if(!running) renderTimer();
-}
-
-function closeTimer(){
-  const timerModal = $("timerModal");
-  if(timerModal) timerModal.classList.add("hidden");
-}
+function openTimer(){ $("timerModal")?.classList.remove("hidden"); if(!running) renderTimer(); }
+function closeTimer(){ $("timerModal")?.classList.add("hidden"); }
 
 function startTimer(){
-  const timerMin = $("timerMin");
-  const timerSec = $("timerSec");
+  const m = Math.max(0, Number($("timerMin")?.value || 0));
+  const s = Math.min(59, Math.max(0, Number($("timerSec")?.value || 0)));
   const timerInputs = $("timerInputs");
   const timerHint = $("timerHint");
 
-  const m = Math.max(0, Number(timerMin?.value || 0));
-  const s = Math.min(59, Math.max(0, Number(timerSec?.value || 0)));
-
-  if(!running && remainingSeconds === 0){
-    remainingSeconds = (m * 60) + s;
-  }
-
+  if(!running && remainingSeconds === 0) remainingSeconds = (m * 60) + s;
   if(remainingSeconds <= 0){
     if(timerHint) timerHint.textContent = "Please set a time greater than 0.";
     return;
   }
 
   running = true;
-  if(timerInputs){
-    timerInputs.style.opacity = "0.55";
-    timerInputs.style.pointerEvents = "none";
-  }
+  if(timerInputs){ timerInputs.style.opacity = "0.55"; timerInputs.style.pointerEvents = "none"; }
   if(timerHint) timerHint.textContent = "Timer running… Focus!";
-
   setButtonsState();
   renderTimer();
 
   if(timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     remainingSeconds -= 1;
-
     if(remainingSeconds <= 0){
       remainingSeconds = 0;
       renderTimer();
-
       clearInterval(timerInterval);
       timerInterval = null;
       running = false;
 
-      if(timerInputs){
-        timerInputs.style.opacity = "1";
-        timerInputs.style.pointerEvents = "auto";
-      }
+      if(timerInputs){ timerInputs.style.opacity = "1"; timerInputs.style.pointerEvents = "auto"; }
       setButtonsState();
-
       showAlarmPopup();
       if(timerHint) timerHint.textContent = "Time finished. Set again or restart.";
       return;
     }
-
     renderTimer();
   }, 1000);
 }
-
 function pauseTimer(){
   if(!running) return;
-
-  const timerInputs = $("timerInputs");
-  const timerHint = $("timerHint");
-
   running = false;
-
-  if(timerInterval){
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
-  if(timerInputs){
-    timerInputs.style.opacity = "1";
-    timerInputs.style.pointerEvents = "auto";
-  }
-  if(timerHint) timerHint.textContent = "Paused. Press Start to continue.";
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
+  $("timerInputs") && (($("timerInputs").style.opacity = "1"), ($("timerInputs").style.pointerEvents = "auto"));
+  $("timerHint") && ($("timerHint").textContent = "Paused. Press Start to continue.");
   setButtonsState();
 }
-
 function resetTimer(){
-  const timerInputs = $("timerInputs");
-  const timerHint = $("timerHint");
-
   running = false;
-
-  if(timerInterval){
-    clearInterval(timerInterval);
-    timerInterval = null;
-  }
-
+  if(timerInterval){ clearInterval(timerInterval); timerInterval = null; }
   remainingSeconds = 0;
-  if(timerInputs){
-    timerInputs.style.opacity = "1";
-    timerInputs.style.pointerEvents = "auto";
-  }
+  $("timerInputs") && (($("timerInputs").style.opacity = "1"), ($("timerInputs").style.pointerEvents = "auto"));
   renderTimer();
-  if(timerHint) timerHint.textContent = "Reset. Set time and press Start.";
+  $("timerHint") && ($("timerHint").textContent = "Reset. Set time and press Start.");
   setButtonsState();
 }
 
-/* ----------------------------
-   ✅ To-Do List Logic
----------------------------- */
+// ----------------------------
+// To-Do
+// ----------------------------
 function loadTodos(){
   const raw = localStorage.getItem(TODO_KEY);
-  try { return raw ? JSON.parse(raw) : []; }
-  catch { return []; }
+  try { return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
-
 function saveTodos(todos){
   localStorage.setItem(TODO_KEY, JSON.stringify(todos));
 }
-
 function renderTodos(){
   const listEl = $("todoList");
   if(!listEl) return;
@@ -677,7 +551,6 @@ function renderTodos(){
   todos.forEach((task, index) => {
     const row = document.createElement("div");
     row.className = "todoItem";
-
     row.innerHTML = `
       <span>${escapeHTML(task)}</span>
       <button type="button" aria-label="Delete task">✕</button>
@@ -693,376 +566,28 @@ function renderTodos(){
     listEl.appendChild(row);
   });
 }
-
 function bindTodo(){
-  const addTodoBtn = $("addTodoBtn");
-  const todoInput = $("todoInput");
+  $("addTodoBtn")?.addEventListener("click", () => {
+    const input = $("todoInput");
+    const value = (input?.value || "").trim();
+    if(!value) return;
+    const todos = loadTodos();
+    todos.push(value);
+    saveTodos(todos);
+    input.value = "";
+    renderTodos();
+  });
 
-  if(addTodoBtn){
-    addTodoBtn.addEventListener("click", () => {
-      const value = (todoInput?.value || "").trim();
-      if(!value) return;
-
-      const todos = loadTodos();
-      todos.push(value);
-      saveTodos(todos);
-
-      todoInput.value = "";
-      renderTodos();
-    });
-  }
-
-  if(todoInput){
-    todoInput.addEventListener("keydown", (e) => {
-      if(e.key === "Enter"){
-        addTodoBtn?.click();
-      }
-    });
-  }
-}
-
-/* ============================
-   ✅ SHAREABLE STUDY ROOMS (Firestore)
-   Rooms by URL: ?room=ROOM_ID
-============================ */
-
-/**
- * ✅ 1) Create Firebase project + Firestore
- * ✅ 2) Paste your config here:
- */
-const firebaseConfig = {
-  apiKey: "PASTE_API_KEY",
-  authDomain: "PASTE_AUTH_DOMAIN",
-  projectId: "PASTE_PROJECT_ID"
-};
-
-let db = null;
-let unsubMessages = null;
-let activeRoomId = null;
-
-function escapeHTML(str){
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function fmtTime(ts){
-  try{
-    const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  }catch{
-    return "";
-  }
-}
-
-function randomRoomId(){
-  // short readable code
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  let out = "";
-  for(let i=0;i<8;i++){
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return out;
-}
-
-function getRoomFromURL(){
-  const u = new URL(location.href);
-  const room = (u.searchParams.get("room") || "").trim();
-  return room || null;
-}
-
-function setRoomInURL(roomId){
-  const u = new URL(location.href);
-  u.searchParams.set("room", roomId);
-  history.replaceState({}, "", u.toString());
-}
-
-function makeShareLink(roomId){
-  const u = new URL(location.href);
-  u.searchParams.set("room", roomId);
-  return u.toString();
-}
-
-function setChatUIEnabled(enabled){
-  const input = $("chatInput");
-  const send = $("chatSendBtn");
-  const copy = $("copyRoomLinkBtn");
-  if(input) input.disabled = !enabled;
-  if(send) send.disabled = !enabled;
-  if(copy) copy.disabled = !enabled;
-}
-
-function setChatStatus(text){
-  const el = $("chatStatus");
-  if(el) el.textContent = text;
-}
-
-function setRoomMeta(text){
-  const el = $("chatRoomMeta");
-  if(el) el.textContent = text;
-}
-
-function renderChatMessages(msgs){
-  const list = $("chatMessages");
-  if(!list) return;
-
-  list.innerHTML = msgs.map(m => {
-    const name = escapeHTML(m.name || "Student");
-    const time = escapeHTML(fmtTime(m.createdAt));
-    const text = escapeHTML(m.text || "");
-    return `
-      <div class="chatMsg">
-        <div class="chatMsgTop">
-          <div class="chatMsgName">${name}</div>
-          <div class="chatMsgTime">${time}</div>
-        </div>
-        <div class="chatMsgText">${text}</div>
-      </div>
-    `;
-  }).join("");
-
-  list.scrollTop = list.scrollHeight;
-}
-
-async function initFirebase(){
-  // Don’t crash app if config not filled
-  if(
-    !firebaseConfig.apiKey || firebaseConfig.apiKey.includes("PASTE_") ||
-    !firebaseConfig.projectId || firebaseConfig.projectId.includes("PASTE_")
-  ){
-    setChatStatus("Config missing");
-    setRoomMeta("Paste Firebase config in app.js");
-    setChatUIEnabled(false);
-    return null;
-  }
-
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-  const {
-    getFirestore, doc, setDoc, serverTimestamp,
-    collection, addDoc, query, orderBy, limit, onSnapshot
-  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-
-  return { doc, setDoc, serverTimestamp, collection, addDoc, query, orderBy, limit, onSnapshot };
-}
-
-async function joinRoom(roomId){
-  roomId = (roomId || "").trim().toLowerCase();
-  if(!roomId) return;
-
-  const fb = await initFirebase();
-  if(!fb) return;
-
-  const { doc, setDoc, serverTimestamp, collection, query, orderBy, limit, onSnapshot } = fb;
-
-  // cleanup old listener
-  if(unsubMessages){
-    unsubMessages();
-    unsubMessages = null;
-  }
-
-  activeRoomId = roomId;
-  setRoomInURL(roomId);
-
-  setChatStatus("Live ✅");
-  setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
-  setChatUIEnabled(true);
-
-  // ensure room doc exists
-  try{
-    await setDoc(doc(db, "rooms", roomId), { createdAt: serverTimestamp() }, { merge: true });
-  }catch(err){
-    console.warn("room create/merge failed:", err);
-  }
-
-  // listen messages
-  const q = query(
-    collection(db, "rooms", roomId, "messages"),
-    orderBy("createdAt", "desc"),
-    limit(80)
-  );
-
-  unsubMessages = onSnapshot(q, (snap) => {
-    const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
-    renderChatMessages(docs);
-  }, (err) => {
-    console.warn("chat listen error:", err);
-    setChatStatus("Offline");
+  $("todoInput")?.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") $("addTodoBtn")?.click();
   });
 }
 
-async function sendChatMessage(){
-  const roomId = activeRoomId;
-  if(!roomId) return;
-
-  const input = $("chatInput");
-  const text = (input?.value || "").trim();
-  if(!text) return;
-
-  const user = loadUser();
-  const name = user?.name ? String(user.name).slice(0, 30) : "Student";
-
-  const fb = await initFirebase();
-  if(!fb) return;
-
-  const { collection, addDoc, serverTimestamp } = fb;
-
-  // clear early for snappy UI
-  input.value = "";
-
-  try{
-    await addDoc(collection(db, "rooms", roomId, "messages"), {
-      name,
-      text: text.slice(0, 220),
-      createdAt: serverTimestamp()
-    });
-  }catch(err){
-    console.warn("send failed:", err);
-    setChatStatus("Send failed");
-    setTimeout(() => setChatStatus("Live ✅"), 1200);
-  }
-}
-
-async function copyRoomLink(){
-  if(!activeRoomId) return;
-  const link = makeShareLink(activeRoomId);
-
-  try{
-    await navigator.clipboard.writeText(link);
-    setChatStatus("Link copied ✅");
-    setTimeout(() => setChatStatus("Live ✅"), 1200);
-  }catch{
-    // fallback
-    prompt("Copy this link:", link);
-  }
-}
-
-function bindChatUI(){
-  $("createRoomBtn")?.addEventListener("click", () => {
-    const roomId = randomRoomId();
-    joinRoom(roomId);
-  });
-
-  $("joinRoomBtn")?.addEventListener("click", () => {
-    const code = ($("joinRoomInput")?.value || "").trim();
-    if(!code){
-      alert("Enter a room code.");
-      return;
-    }
-    joinRoom(code);
-  });
-
-  $("copyRoomLinkBtn")?.addEventListener("click", copyRoomLink);
-
-  $("chatSendBtn")?.addEventListener("click", sendChatMessage);
-  $("chatInput")?.addEventListener("keydown", (e) => {
-    if(e.key === "Enter") sendChatMessage();
-  });
-}
-
-async function initRoomFromURL(){
-  const roomId = getRoomFromURL();
-  if(roomId){
-    await joinRoom(roomId);
-  }else{
-    // No room selected initially
-    setChatStatus("Offline");
-    setChatUIEnabled(false);
-    setRoomMeta("No room • Create or join to start");
-  }
-}
-
-/* ----------------------------
-   ✅ Bind Events after DOM ready
----------------------------- */
-document.addEventListener("DOMContentLoaded", async () => {
-  // Theme
-  initTheme();
-
-  // User capture
-  initUserCapture();
-
-  // Done button -> Home
-  $("doneBtn")?.addEventListener("click", showHome);
-
-  // Quote + UI
-  loadDailyQuote();
-  renderHome();
-  updateCountdownDisplay();
-  showHome();
-
-  // Countdown click
-  $("countdownPill")?.addEventListener("click", promptSetExamDate);
-
-  // Subject screen buttons
-  $("backBtn")?.addEventListener("click", showHome);
-
-  $("markAll")?.addEventListener("click", () => {
-    if(!currentSubject) return;
-    const state = loadState();
-    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
-    saveState(state);
-    renderSubject();
-    renderHome();
-  });
-
-  $("clearAll")?.addEventListener("click", () => {
-    if(!currentSubject) return;
-    const state = loadState();
-    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
-    saveState(state);
-    renderSubject();
-    renderHome();
-  });
-
-  $("resetAll")?.addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    if(currentSubject) renderSubject();
-    renderHome();
-  });
-
-  // Timer bindings
-  $("openTimerBtn")?.addEventListener("click", openTimer);
-  $("closeTimerBtn")?.addEventListener("click", closeTimer);
-
-  const timerModal = $("timerModal");
-  if(timerModal){
-    timerModal.addEventListener("click", (e) => {
-      if(e.target === timerModal) closeTimer();
-    });
-  }
-
-  $("startTimerBtn")?.addEventListener("click", startTimer);
-  $("pauseTimerBtn")?.addEventListener("click", pauseTimer);
-  $("resetTimerBtn")?.addEventListener("click", resetTimer);
-
-  // Alarm OK
-  $("alarmOkBtn")?.addEventListener("click", hideAlarmPopup);
-
-  // To-do
-  bindTodo();
-  renderTodos();
-
-  // Timer initial view
-  renderTimer();
-  setButtonsState();
-
-  // ✅ Study room
-  bindChatUI();
-  await initRoomFromURL();
-});
 // ============================
 // ✅ SHAREABLE STUDY ROOMS (Firestore)
-// Rooms: /rooms/{roomId}
-// Messages: /rooms/{roomId}/messages
 // ============================
 
-// ✅ Your config (from screenshot)
+// ✅ Your Firebase config (from screenshot)
 const firebaseConfig = {
   apiKey: "AIzaSyBtwjeGsQfrT8kBRyA45d1ajwFX0q8qTWk",
   authDomain: "ca-study-rooms.firebaseapp.com",
@@ -1076,7 +601,6 @@ let db = null;
 let unsubMessages = null;
 let activeRoomId = null;
 
-// ---- helpers ----
 function escapeHTML(str){
   return String(str)
     .replaceAll("&", "&amp;")
@@ -1089,7 +613,7 @@ function escapeHTML(str){
 function randomRoomId(){
   const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
   let out = "";
-  for(let i=0; i<8; i++){
+  for(let i=0;i<8;i++){
     out += alphabet[Math.floor(Math.random() * alphabet.length)];
   }
   return out;
@@ -1099,13 +623,11 @@ function getRoomFromURL(){
   const u = new URL(location.href);
   return (u.searchParams.get("room") || "").trim() || null;
 }
-
 function setRoomInURL(roomId){
   const u = new URL(location.href);
   u.searchParams.set("room", roomId);
   history.replaceState({}, "", u.toString());
 }
-
 function makeShareLink(roomId){
   const u = new URL(location.href);
   u.searchParams.set("room", roomId);
@@ -1113,26 +635,16 @@ function makeShareLink(roomId){
 }
 
 function setChatUIEnabled(enabled){
-  const input = document.getElementById("chatInput");
-  const send = document.getElementById("chatSendBtn");
-  const copy = document.getElementById("copyRoomLinkBtn");
-  if(input) input.disabled = !enabled;
-  if(send) send.disabled = !enabled;
-  if(copy) copy.disabled = !enabled;
+  $("chatInput") && ($("chatInput").disabled = !enabled);
+  $("chatSendBtn") && ($("chatSendBtn").disabled = !enabled);
+  $("copyRoomLinkBtn") && ($("copyRoomLinkBtn").disabled = !enabled);
 }
 
-function setChatStatus(text){
-  const el = document.getElementById("chatStatus");
-  if(el) el.textContent = text;
-}
-
-function setRoomMeta(text){
-  const el = document.getElementById("chatRoomMeta");
-  if(el) el.textContent = text;
-}
+function setChatStatus(text){ $("chatStatus") && ($("chatStatus").textContent = text); }
+function setRoomMeta(text){ $("chatRoomMeta") && ($("chatRoomMeta").textContent = text); }
 
 function renderChatMessages(msgs){
-  const list = document.getElementById("chatMessages");
+  const list = $("chatMessages");
   if(!list) return;
 
   list.innerHTML = msgs.map(m => {
@@ -1152,13 +664,11 @@ function renderChatMessages(msgs){
   list.scrollTop = list.scrollHeight;
 }
 
-// ---- firebase init (CDN modular imports) ----
 async function initFirebase(){
   if(db) return db;
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
   const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   return db;
@@ -1175,11 +685,7 @@ async function joinRoom(roomId){
     collection, query, orderBy, limit, onSnapshot
   } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
-  // stop old room listener
-  if(unsubMessages){
-    unsubMessages();
-    unsubMessages = null;
-  }
+  if(unsubMessages){ unsubMessages(); unsubMessages = null; }
 
   activeRoomId = roomId;
   setRoomInURL(roomId);
@@ -1188,10 +694,9 @@ async function joinRoom(roomId){
   setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
   setChatUIEnabled(true);
 
-  // create room doc if not exists
+  // create room doc (safe)
   await setDoc(doc(db, "rooms", roomId), { createdAt: serverTimestamp() }, { merge: true });
 
-  // listen to messages
   const q = query(
     collection(db, "rooms", roomId, "messages"),
     orderBy("createdAt", "desc"),
@@ -1210,18 +715,17 @@ async function joinRoom(roomId){
 async function sendChatMessage(){
   if(!activeRoomId) return;
 
-  const input = document.getElementById("chatInput");
+  const input = $("chatInput");
   const text = (input?.value || "").trim();
   if(!text) return;
 
-  // uses your existing user capture function if you have it:
-  // const user = loadUser();
-  // const name = user?.name ? String(user.name).slice(0, 30) : "Student";
-  const name = "Student"; // change to your loadUser() name if needed
+  const user = loadUser();
+  const name = user?.name ? String(user.name).slice(0, 30) : "Student";
 
   input.value = "";
 
   await initFirebase();
+
   const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
   try{
@@ -1251,20 +755,16 @@ async function copyRoomLink(){
 }
 
 function bindChatUI(){
-  document.getElementById("createRoomBtn")?.addEventListener("click", () => {
-    joinRoom(randomRoomId());
-  });
-
-  document.getElementById("joinRoomBtn")?.addEventListener("click", () => {
-    const code = (document.getElementById("joinRoomInput")?.value || "").trim();
+  $("createRoomBtn")?.addEventListener("click", () => joinRoom(randomRoomId()));
+  $("joinRoomBtn")?.addEventListener("click", () => {
+    const code = ($("joinRoomInput")?.value || "").trim();
     if(!code) return alert("Enter a room code.");
     joinRoom(code);
   });
+  $("copyRoomLinkBtn")?.addEventListener("click", copyRoomLink);
 
-  document.getElementById("copyRoomLinkBtn")?.addEventListener("click", copyRoomLink);
-
-  document.getElementById("chatSendBtn")?.addEventListener("click", sendChatMessage);
-  document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
+  $("chatSendBtn")?.addEventListener("click", sendChatMessage);
+  $("chatInput")?.addEventListener("keydown", (e) => {
     if(e.key === "Enter") sendChatMessage();
   });
 }
@@ -1280,8 +780,68 @@ async function initRoomFromURL(){
   }
 }
 
-// ✅ Call these in DOMContentLoaded
-document.addEventListener("DOMContentLoaded", () => {
+// ----------------------------
+// DOM Ready
+// ----------------------------
+document.addEventListener("DOMContentLoaded", async () => {
+  initTheme();
+  initUserCapture();
+
+  loadDailyQuote();
+  renderHome();
+  updateCountdownDisplay();
+  showHome();
+
+  $("countdownPill")?.addEventListener("click", promptSetExamDate);
+
+  $("doneBtn")?.addEventListener("click", showHome);
+  $("backBtn")?.addEventListener("click", showHome);
+
+  $("markAll")?.addEventListener("click", () => {
+    if(!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("clearAll")?.addEventListener("click", () => {
+    if(!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("resetAll")?.addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    if(currentSubject) renderSubject();
+    renderHome();
+  });
+
+  // Timer
+  $("openTimerBtn")?.addEventListener("click", openTimer);
+  $("closeTimerBtn")?.addEventListener("click", closeTimer);
+
+  $("timerModal")?.addEventListener("click", (e) => {
+    if(e.target === $("timerModal")) closeTimer();
+  });
+
+  $("startTimerBtn")?.addEventListener("click", startTimer);
+  $("pauseTimerBtn")?.addEventListener("click", pauseTimer);
+  $("resetTimerBtn")?.addEventListener("click", resetTimer);
+  $("alarmOkBtn")?.addEventListener("click", hideAlarmPopup);
+
+  renderTimer();
+  setButtonsState();
+
+  // To-do
+  bindTodo();
+  renderTodos();
+
+  // ✅ Rooms
   bindChatUI();
-  initRoomFromURL();
+  await initRoomFromURL();
 });
