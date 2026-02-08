@@ -135,7 +135,6 @@ function bindUserCapture(){
     closeUserCapture();
   });
 }
-
 function initUserCapture(){
   bindUserCapture();
   if(!loadUser()) openUserCapture();
@@ -534,6 +533,15 @@ function resetTimer(){
 // ----------------------------
 // To-Do
 // ----------------------------
+function escapeHTML(str){
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function loadTodos(){
   const raw = localStorage.getItem(TODO_KEY);
   try { return raw ? JSON.parse(raw) : []; } catch { return []; }
@@ -587,28 +595,30 @@ function bindTodo(){
 // ✅ SHAREABLE STUDY ROOMS (Firestore)
 // ============================
 
-// ✅ Your Firebase config (from screenshot)
+// ✅ Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBtwjeGsQfrT8kBRyA45d1ajwFX0q8qTWk",
   authDomain: "ca-study-rooms.firebaseapp.com",
   projectId: "ca-study-rooms",
-  storageBucket: "ca-study-rooms.firebasestorage.app",
+  storageBucket: "ca-study-rooms.appspot.com", // (bucket name doesn't affect Firestore; but keep standard)
   messagingSenderId: "95273803267",
   appId: "1:95273803267:web:9795448f0fffff79e98b836"
 };
 
-let db = null;
+// One-time Firebase imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getFirestore,
+  doc, setDoc, serverTimestamp,
+  collection, query, orderBy, limit, onSnapshot,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
 let unsubMessages = null;
 let activeRoomId = null;
-
-function escapeHTML(str){
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
 
 function randomRoomId(){
   const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
@@ -619,9 +629,16 @@ function randomRoomId(){
   return out;
 }
 
+function normalizeRoomId(roomId){
+  const r = String(roomId || "").trim().toLowerCase();
+  // allow only a-z 0-9 - _
+  const cleaned = r.replace(/[^a-z0-9_-]/g, "");
+  return cleaned || null;
+}
+
 function getRoomFromURL(){
   const u = new URL(location.href);
-  return (u.searchParams.get("room") || "").trim() || null;
+  return normalizeRoomId(u.searchParams.get("room"));
 }
 function setRoomInURL(roomId){
   const u = new URL(location.href);
@@ -643,6 +660,17 @@ function setChatUIEnabled(enabled){
 function setChatStatus(text){ $("chatStatus") && ($("chatStatus").textContent = text); }
 function setRoomMeta(text){ $("chatRoomMeta") && ($("chatRoomMeta").textContent = text); }
 
+function formatTime(ts){
+  try{
+    if(!ts) return "";
+    const d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : null);
+    if(!d) return "";
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }catch{
+    return "";
+  }
+}
+
 function renderChatMessages(msgs){
   const list = $("chatMessages");
   if(!list) return;
@@ -650,11 +678,12 @@ function renderChatMessages(msgs){
   list.innerHTML = msgs.map(m => {
     const name = escapeHTML(m.name || "Student");
     const text = escapeHTML(m.text || "");
+    const time = formatTime(m.createdAt);
     return `
       <div class="chatMsg">
         <div class="chatMsgTop">
           <div class="chatMsgName">${name}</div>
-          <div class="chatMsgTime"></div>
+          <div class="chatMsgTime">${escapeHTML(time)}</div>
         </div>
         <div class="chatMsgText">${text}</div>
       </div>
@@ -664,41 +693,36 @@ function renderChatMessages(msgs){
   list.scrollTop = list.scrollHeight;
 }
 
-async function initFirebase(){
-  if(db) return db;
-
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-  const app = initializeApp(firebaseConfig);
-  db = getFirestore(app);
-  return db;
-}
-
 async function joinRoom(roomId){
-  roomId = (roomId || "").trim().toLowerCase();
-  if(!roomId) return;
+  const rid = normalizeRoomId(roomId);
+  if(!rid){
+    alert("Invalid room code.");
+    return;
+  }
 
-  await initFirebase();
-
-  const {
-    doc, setDoc, serverTimestamp,
-    collection, query, orderBy, limit, onSnapshot
-  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
+  // stop old listener
   if(unsubMessages){ unsubMessages(); unsubMessages = null; }
 
-  activeRoomId = roomId;
-  setRoomInURL(roomId);
+  activeRoomId = rid;
+  setRoomInURL(rid);
 
   setChatStatus("Live ✅");
-  setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
+  setRoomMeta(`Room: ${rid} • Share link to invite friends`);
   setChatUIEnabled(true);
 
-  // create room doc (safe)
-  await setDoc(doc(db, "rooms", roomId), { createdAt: serverTimestamp() }, { merge: true });
+  // Ensure room doc exists
+  try{
+    await setDoc(doc(db, "rooms", rid), { createdAt: serverTimestamp() }, { merge: true });
+  }catch(e){
+    console.error("Room create failed:", e);
+    setChatStatus("Offline");
+    setRoomMeta("Permission error (check Firestore rules)");
+    setChatUIEnabled(false);
+    return;
+  }
 
   const q = query(
-    collection(db, "rooms", roomId, "messages"),
+    collection(db, "rooms", rid, "messages"),
     orderBy("createdAt", "desc"),
     limit(80)
   );
@@ -707,7 +731,7 @@ async function joinRoom(roomId){
     const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
     renderChatMessages(docs);
   }, (err) => {
-    console.warn("Chat listener error:", err);
+    console.error("Chat listener error:", err);
     setChatStatus("Offline");
   });
 }
@@ -724,10 +748,6 @@ async function sendChatMessage(){
 
   input.value = "";
 
-  await initFirebase();
-
-  const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
   try{
     await addDoc(collection(db, "rooms", activeRoomId, "messages"), {
       name,
@@ -735,7 +755,7 @@ async function sendChatMessage(){
       createdAt: serverTimestamp()
     });
   }catch(err){
-    console.warn("Send failed:", err);
+    console.error("Send failed:", err);
     setChatStatus("Send failed");
     setTimeout(() => setChatStatus("Live ✅"), 1200);
   }
