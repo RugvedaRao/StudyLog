@@ -94,7 +94,7 @@ const THEME_KEY = "ca_theme_v1";
 const USER_KEY = "ca_user_v1";
 
 // ✅ Google Apps Script Web App URL (your new one)
-const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzGABxUAcwHSLfTU8-iowS5evscDgAOGQgbRcU8VB4Ps7YQalwG_BOtRX-PSFlopPxxMQ/exec";
+const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbxvAy_BvXUTcOknFET8ppT6N1r0_eRmcNlCt_KJEijRPsw_ldxsmKycW_nwvxVSc-faTA/exec";
 
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
