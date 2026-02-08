@@ -306,7 +306,9 @@ body[data-theme="light"] .todoItem{ background: rgba(0,0,0,.04); }
 }
 
 /* ✅ Study Room */
+/* OPTIONAL UI FIX: make chatCard span 2 columns like To-Do */
 .chatCard{
+  grid-column: 3 / span 2; /* <-- optional; remove if you want default */
   background: var(--tileBg);
   border: 1px solid var(--tileBorder);
   border-radius:18px;
@@ -316,6 +318,7 @@ body[data-theme="light"] .todoItem{ background: rgba(0,0,0,.04); }
   flex-direction:column;
   gap:12px;
 }
+
 .chatHeader{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
 .chatTitle{ font-weight:900; font-size:16px; color: var(--text); }
 .chatSub{ margin-top:4px; font-weight:800; font-size:12px; color: var(--muted); }
@@ -627,3 +630,4 @@ body[data-theme="light"] button.secondary{
   .extrasGrid{ grid-template-columns: 1fr; }
   .todoCard, .chatCard, .quickLinksCard{ grid-column:auto; }
 }
+
