@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
-
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -41,7 +40,7 @@
           <div class="titleRow">
             <div class="title">Progress</div>
 
-            <!-- ✅ Theme Toggle (extreme right) -->
+            <!-- Theme Toggle -->
             <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">
               <span class="themeIcon" id="themeIcon">🌙</span>
               <span class="themeText" id="themeText">Dark</span>
@@ -51,15 +50,15 @@
           <!-- Progress Rings -->
           <div class="metersGrid" id="metersGrid"></div>
 
-          <!-- Overall (ONLY ONCE) -->
+          <!-- Overall -->
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
 
-          <!-- ✅ Extras grid aligned to 4 columns -->
+          <!-- Extras grid -->
           <div class="extrasGrid">
 
-            <!-- ✅ To-Do: spans col 1-2 (till Business Laws) -->
+            <!-- To-Do (col 1-2) -->
             <div class="todoCard" id="todoCard">
               <div class="todoHeader">
                 <div class="todoTitle">To-Do List</div>
@@ -73,10 +72,40 @@
               <div class="todoList" id="todoList"></div>
             </div>
 
-            <!-- ✅ Spacer for column 3 (below Quantitative Aptitude) -->
-            <div class="extrasSpacer" aria-hidden="true"></div>
+            <!-- ✅ Study Room (col 3) -->
+            <div class="chatCard" id="chatCard">
+              <div class="chatHeader">
+                <div>
+                  <div class="chatTitle">Public Study Room</div>
+                  <div class="chatSub" id="chatRoomMeta">No room selected</div>
+                </div>
+                <div class="chatStatus" id="chatStatus">Offline</div>
+              </div>
 
-            <!-- ✅ Quick Links: col 4 (below Business Economics) -->
+              <div class="chatActions">
+                <button class="secondary smallBtn" id="createRoomBtn" type="button">Create Room</button>
+
+                <div class="joinRow">
+                  <input id="joinRoomInput" type="text" placeholder="Enter room code" maxlength="32" />
+                  <button class="secondary smallBtn" id="joinRoomBtn" type="button">Join</button>
+                </div>
+
+                <button class="secondary smallBtn" id="copyRoomLinkBtn" type="button" disabled>Copy Link</button>
+              </div>
+
+              <div class="chatMessages" id="chatMessages"></div>
+
+              <div class="chatInputRow">
+                <input type="text" id="chatInput" placeholder="Type your doubt/message…" maxlength="220" disabled />
+                <button id="chatSendBtn" type="button" disabled>Send</button>
+              </div>
+
+              <div class="chatHint" id="chatHint">
+                Create a room or join using a code. Then share the link with your friends.
+              </div>
+            </div>
+
+            <!-- Quick Links (col 4) -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -112,7 +141,6 @@
 
           <div class="topics" id="topics"></div>
 
-          <!-- ✅ Done button inline, pushed to right -->
           <div class="actions">
             <button class="secondary" id="markAll" type="button">Mark All</button>
             <button class="secondary" id="clearAll" type="button">Clear All</button>
@@ -153,9 +181,7 @@
               <button class="timerBtn secondary" id="resetTimerBtn" type="button" disabled>Reset</button>
             </div>
 
-            <div class="timerHint" id="timerHint">
-              Set time and press Start.
-            </div>
+            <div class="timerHint" id="timerHint">Set time and press Start.</div>
           </div>
         </div>
       </div>
@@ -163,8 +189,7 @@
     </main>
   </div>
 
-  <!-- ✅ NEW: USER CAPTURE MODAL (Name + Email) -->
-  <!-- Required by app.js ids: userModal, userForm, userName, userEmail, userMsg -->
+  <!-- USER CAPTURE MODAL -->
   <div class="userModal hidden" id="userModal">
     <div class="userPanel">
       <div class="userTop">
@@ -196,7 +221,7 @@
     </div>
   </div>
 
-  <!-- ✅ ALARM POPUP -->
+  <!-- ALARM POPUP -->
   <div class="alarmOverlay hidden" id="alarmOverlay">
     <div class="alarmBox">
       <div class="alarmTitle">⏰ Time’s up!</div>
@@ -205,6 +230,7 @@
     </div>
   </div>
 
-  <script src="./app.js?v=10"></script>
+  <!-- ✅ IMPORTANT: app.js is a module because we import Firebase -->
+  <script type="module" src="./app.js?v=1"></script>
 </body>
 </html>
