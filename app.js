@@ -97,7 +97,7 @@ const USER_KEY = "ca_user_v1";
 // Formspree:
 // const LEAD_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
 // Google Apps Script:
-const LEAD_ENDPOINT = "YOUR_APPS_SCRIPT_WEBAPP_URL";
+const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnYgd-b68OiIzrneDxgPJMcOnvGTfvMYzAk9uwJGZQjOSOKrCDYGOHXC1DjawR7tF2DA/exec";
 
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
