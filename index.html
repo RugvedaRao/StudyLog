@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CA Foundation Tracker</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 
 <body>
   <div class="app">
+
+    <!-- ================= HEADER ================= -->
     <header class="hero">
       <div class="hero-inner">
         <div class="brand">
@@ -16,96 +18,100 @@
         </div>
 
         <div class="hero-actions">
-          <button class="ribbonTimerBtn" id="openTimerBtn" type="button">
-            Set Timer
-          </button>
+          <button id="openTimerBtn" class="ribbonTimerBtn">Set Timer</button>
 
-          <div class="countdownPill" id="countdownPill" title="Click to set/change exam date">
+          <div class="countdownPill" id="countdownPill">
             <div class="time" id="countdownTime">SET EXAM DATE</div>
           </div>
         </div>
       </div>
     </header>
 
+    <!-- ================= MAIN ================= -->
     <main class="content">
 
       <!-- Quote -->
       <div class="quoteCard">
-        <div class="quoteText" id="quoteText">Loading quote...</div>
+        <div id="quoteText" class="quoteText">Loading quote...</div>
       </div>
 
-      <!-- HOME SCREEN -->
+      <!-- ================= HOME SCREEN ================= -->
       <section id="homeScreen">
         <div class="card">
+
           <div class="titleRow">
             <div class="title">Progress</div>
 
-            <!-- Theme Toggle -->
-            <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">
-              <span class="themeIcon" id="themeIcon">🌙</span>
-              <span class="themeText" id="themeText">Dark</span>
+            <button id="themeToggle" class="themeToggle">
+              <span id="themeIcon">🌙</span>
+              <span id="themeText">Dark</span>
             </button>
           </div>
 
           <!-- Progress Rings -->
-          <div class="metersGrid" id="metersGrid"></div>
+          <div id="metersGrid" class="metersGrid"></div>
 
-          <!-- Overall -->
-          <div class="overallBelow" id="overallBelow">
+          <div id="overallBelow" class="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
 
-          <!-- Extras grid -->
+          <!-- ================= EXTRAS GRID ================= -->
           <div class="extrasGrid">
 
-            <!-- To-Do (col 1-2) -->
-            <div class="todoCard" id="todoCard">
-              <div class="todoHeader">
-                <div class="todoTitle">To-Do List</div>
-              </div>
+            <!-- ===== TO DO ===== -->
+            <div class="todoCard">
+              <div class="todoHeader">To-Do List</div>
 
               <div class="todoInputRow">
-                <input type="text" id="todoInput" placeholder="Add a task..." />
-                <button id="addTodoBtn" type="button">Add</button>
+                <input id="todoInput" type="text" placeholder="Add a task..." />
+                <button id="addTodoBtn">Add</button>
               </div>
 
-              <div class="todoList" id="todoList"></div>
+              <div id="todoList" class="todoList"></div>
             </div>
 
-            <!-- ✅ Study Room (col 3) -->
-            <div class="chatCard" id="chatCard">
+            <!-- ===== STUDY ROOM ===== -->
+            <div class="chatCard">
+
               <div class="chatHeader">
                 <div>
                   <div class="chatTitle">Public Study Room</div>
-                  <div class="chatSub" id="chatRoomMeta">No room selected</div>
+                  <div id="chatRoomMeta" class="chatSub">No room selected</div>
                 </div>
-                <div class="chatStatus" id="chatStatus">Offline</div>
+                <div id="chatStatus" class="chatStatus">Offline</div>
               </div>
 
               <div class="chatActions">
-                <button class="secondary smallBtn" id="createRoomBtn" type="button">Create Room</button>
+                <button id="createRoomBtn" class="secondary smallBtn">
+                  Create Room
+                </button>
 
                 <div class="joinRow">
-                  <input id="joinRoomInput" type="text" placeholder="Enter room code" maxlength="32" />
-                  <button class="secondary smallBtn" id="joinRoomBtn" type="button">Join</button>
+                  <input id="joinRoomInput" type="text" placeholder="Enter room code" />
+                  <button id="joinRoomBtn" class="secondary smallBtn">
+                    Join
+                  </button>
                 </div>
 
-                <button class="secondary smallBtn" id="copyRoomLinkBtn" type="button" disabled>Copy Link</button>
+                <button id="copyRoomLinkBtn" class="secondary smallBtn" disabled>
+                  Copy Link
+                </button>
               </div>
 
-              <div class="chatMessages" id="chatMessages"></div>
+              <div id="chatMessages" class="chatMessages"></div>
 
               <div class="chatInputRow">
-                <input type="text" id="chatInput" placeholder="Type your doubt/message…" maxlength="220" disabled />
-                <button id="chatSendBtn" type="button" disabled>Send</button>
+                <input id="chatInput" type="text" placeholder="Type a message..." disabled />
+                <button id="chatSendBtn" disabled>Send</button>
               </div>
 
-              <div class="chatHint" id="chatHint">
-                Create a room or join using a code. Then share the link with your friends.
+              <div class="chatHint">
+                Create a room and share the link with your study mates.
               </div>
+
             </div>
 
-            <!-- Quick Links (col 4) -->
+            <!-- ===== QUICK LINKS ===== -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -126,111 +132,42 @@
         </div>
       </section>
 
-      <!-- SUBJECT SCREEN -->
-      <section id="subjectScreen" class="hidden">
-        <div class="card">
-          <div class="topbar">
-            <div class="back" id="backBtn">← Back</div>
-            <div class="subjectMini" id="subjectMini"></div>
-          </div>
-
-          <div class="subjectHeader">
-            <h2 id="subjectTitle">Subject</h2>
-            <div class="right" id="subjectRight">0/0 done • 0%</div>
-          </div>
-
-          <div class="topics" id="topics"></div>
-
-          <div class="actions">
-            <button class="secondary" id="markAll" type="button">Mark All</button>
-            <button class="secondary" id="clearAll" type="button">Clear All</button>
-            <button class="secondary" id="resetAll" type="button">Reset ALL</button>
-
-            <div class="actionsSpacer"></div>
-
-            <button id="doneBtn" type="button">Done</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- TIMER MODAL -->
-      <div class="timerModal hidden" id="timerModal">
-        <div class="timerPanel">
-          <div class="timerTop">
-            <div class="timerTitle">Study Timer</div>
-            <button class="timerClose" id="closeTimerBtn" type="button">✕</button>
-          </div>
-
-          <div class="timerBig" id="timerBig">00:00</div>
-
-          <div class="timerSetup">
-            <div class="timerInputs" id="timerInputs">
-              <div class="timerField">
-                <label for="timerMin">Minutes</label>
-                <input type="number" id="timerMin" min="0" max="999" value="5"/>
-              </div>
-              <div class="timerField">
-                <label for="timerSec">Seconds</label>
-                <input type="number" id="timerSec" min="0" max="59" value="0"/>
-              </div>
-            </div>
-
-            <div class="timerBtns">
-              <button class="timerBtn" id="startTimerBtn" type="button">Start</button>
-              <button class="timerBtn secondary" id="pauseTimerBtn" type="button" disabled>Pause</button>
-              <button class="timerBtn secondary" id="resetTimerBtn" type="button" disabled>Reset</button>
-            </div>
-
-            <div class="timerHint" id="timerHint">Set time and press Start.</div>
-          </div>
-        </div>
-      </div>
-
     </main>
   </div>
 
-  <!-- USER CAPTURE MODAL -->
+  <!-- ================= USER MODAL ================= -->
   <div class="userModal hidden" id="userModal">
     <div class="userPanel">
-      <div class="userTop">
-        <div class="userTitle">Welcome 👋</div>
-      </div>
-
-      <div class="userSub">
-        Enter your name & email to save your progress.
-      </div>
+      <div class="userTitle">Welcome 👋</div>
 
       <form id="userForm" class="userForm">
         <div class="userField">
-          <label for="userName">Name</label>
+          <label>Name</label>
           <input id="userName" type="text" placeholder="Your name" required />
         </div>
 
         <div class="userField">
-          <label for="userEmail">Email</label>
+          <label>Email</label>
           <input id="userEmail" type="email" placeholder="you@example.com" required />
         </div>
 
-        <button class="userBtn" type="submit">Continue</button>
-        <div class="userMsg" id="userMsg"></div>
-
-        <div class="userConsent">
-          By continuing, you agree we may store your name & email to save your progress.
-        </div>
+        <button class="userBtn">Continue</button>
+        <div id="userMsg" class="userMsg"></div>
       </form>
     </div>
   </div>
 
-  <!-- ALARM POPUP -->
-  <div class="alarmOverlay hidden" id="alarmOverlay">
+  <!-- ================= ALARM ================= -->
+  <div id="alarmOverlay" class="alarmOverlay hidden">
     <div class="alarmBox">
       <div class="alarmTitle">⏰ Time’s up!</div>
-      <div class="alarmMsg">Press OK to stop the alarm.</div>
-      <button class="alarmOk" id="alarmOkBtn" type="button">OK</button>
+      <div class="alarmMsg">Press OK to stop.</div>
+      <button id="alarmOkBtn" class="alarmOk">OK</button>
     </div>
   </div>
 
-  <!-- ✅ IMPORTANT: app.js is a module because we import Firebase -->
-  <script type="module" src="./app.js?v=1"></script>
+  <!-- IMPORTANT: MUST BE MODULE -->
+  <script type="module" src="./app.js"></script>
+
 </body>
 </html>
