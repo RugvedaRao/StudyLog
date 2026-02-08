@@ -1056,3 +1056,232 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindChatUI();
   await initRoomFromURL();
 });
+// ============================
+// ✅ SHAREABLE STUDY ROOMS (Firestore)
+// Rooms: /rooms/{roomId}
+// Messages: /rooms/{roomId}/messages
+// ============================
+
+// ✅ Your config (from screenshot)
+const firebaseConfig = {
+  apiKey: "AIzaSyBtwjeGsQfrT8kBRyA45d1ajwFX0q8qTWk",
+  authDomain: "ca-study-rooms.firebaseapp.com",
+  projectId: "ca-study-rooms",
+  storageBucket: "ca-study-rooms.firebasestorage.app",
+  messagingSenderId: "95273803267",
+  appId: "1:95273803267:web:9795448f0fffff79e98b836"
+};
+
+let db = null;
+let unsubMessages = null;
+let activeRoomId = null;
+
+// ---- helpers ----
+function escapeHTML(str){
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function randomRoomId(){
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+  let out = "";
+  for(let i=0; i<8; i++){
+    out += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return out;
+}
+
+function getRoomFromURL(){
+  const u = new URL(location.href);
+  return (u.searchParams.get("room") || "").trim() || null;
+}
+
+function setRoomInURL(roomId){
+  const u = new URL(location.href);
+  u.searchParams.set("room", roomId);
+  history.replaceState({}, "", u.toString());
+}
+
+function makeShareLink(roomId){
+  const u = new URL(location.href);
+  u.searchParams.set("room", roomId);
+  return u.toString();
+}
+
+function setChatUIEnabled(enabled){
+  const input = document.getElementById("chatInput");
+  const send = document.getElementById("chatSendBtn");
+  const copy = document.getElementById("copyRoomLinkBtn");
+  if(input) input.disabled = !enabled;
+  if(send) send.disabled = !enabled;
+  if(copy) copy.disabled = !enabled;
+}
+
+function setChatStatus(text){
+  const el = document.getElementById("chatStatus");
+  if(el) el.textContent = text;
+}
+
+function setRoomMeta(text){
+  const el = document.getElementById("chatRoomMeta");
+  if(el) el.textContent = text;
+}
+
+function renderChatMessages(msgs){
+  const list = document.getElementById("chatMessages");
+  if(!list) return;
+
+  list.innerHTML = msgs.map(m => {
+    const name = escapeHTML(m.name || "Student");
+    const text = escapeHTML(m.text || "");
+    return `
+      <div class="chatMsg">
+        <div class="chatMsgTop">
+          <div class="chatMsgName">${name}</div>
+          <div class="chatMsgTime"></div>
+        </div>
+        <div class="chatMsgText">${text}</div>
+      </div>
+    `;
+  }).join("");
+
+  list.scrollTop = list.scrollHeight;
+}
+
+// ---- firebase init (CDN modular imports) ----
+async function initFirebase(){
+  if(db) return db;
+
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  return db;
+}
+
+async function joinRoom(roomId){
+  roomId = (roomId || "").trim().toLowerCase();
+  if(!roomId) return;
+
+  await initFirebase();
+
+  const {
+    doc, setDoc, serverTimestamp,
+    collection, query, orderBy, limit, onSnapshot
+  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  // stop old room listener
+  if(unsubMessages){
+    unsubMessages();
+    unsubMessages = null;
+  }
+
+  activeRoomId = roomId;
+  setRoomInURL(roomId);
+
+  setChatStatus("Live ✅");
+  setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
+  setChatUIEnabled(true);
+
+  // create room doc if not exists
+  await setDoc(doc(db, "rooms", roomId), { createdAt: serverTimestamp() }, { merge: true });
+
+  // listen to messages
+  const q = query(
+    collection(db, "rooms", roomId, "messages"),
+    orderBy("createdAt", "desc"),
+    limit(80)
+  );
+
+  unsubMessages = onSnapshot(q, (snap) => {
+    const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
+    renderChatMessages(docs);
+  }, (err) => {
+    console.warn("Chat listener error:", err);
+    setChatStatus("Offline");
+  });
+}
+
+async function sendChatMessage(){
+  if(!activeRoomId) return;
+
+  const input = document.getElementById("chatInput");
+  const text = (input?.value || "").trim();
+  if(!text) return;
+
+  // uses your existing user capture function if you have it:
+  // const user = loadUser();
+  // const name = user?.name ? String(user.name).slice(0, 30) : "Student";
+  const name = "Student"; // change to your loadUser() name if needed
+
+  input.value = "";
+
+  await initFirebase();
+  const { collection, addDoc, serverTimestamp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  try{
+    await addDoc(collection(db, "rooms", activeRoomId, "messages"), {
+      name,
+      text: text.slice(0, 220),
+      createdAt: serverTimestamp()
+    });
+  }catch(err){
+    console.warn("Send failed:", err);
+    setChatStatus("Send failed");
+    setTimeout(() => setChatStatus("Live ✅"), 1200);
+  }
+}
+
+async function copyRoomLink(){
+  if(!activeRoomId) return;
+  const link = makeShareLink(activeRoomId);
+
+  try{
+    await navigator.clipboard.writeText(link);
+    setChatStatus("Link copied ✅");
+    setTimeout(() => setChatStatus("Live ✅"), 1200);
+  }catch{
+    prompt("Copy this link:", link);
+  }
+}
+
+function bindChatUI(){
+  document.getElementById("createRoomBtn")?.addEventListener("click", () => {
+    joinRoom(randomRoomId());
+  });
+
+  document.getElementById("joinRoomBtn")?.addEventListener("click", () => {
+    const code = (document.getElementById("joinRoomInput")?.value || "").trim();
+    if(!code) return alert("Enter a room code.");
+    joinRoom(code);
+  });
+
+  document.getElementById("copyRoomLinkBtn")?.addEventListener("click", copyRoomLink);
+
+  document.getElementById("chatSendBtn")?.addEventListener("click", sendChatMessage);
+  document.getElementById("chatInput")?.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") sendChatMessage();
+  });
+}
+
+async function initRoomFromURL(){
+  const roomId = getRoomFromURL();
+  if(roomId){
+    await joinRoom(roomId);
+  }else{
+    setChatStatus("Offline");
+    setRoomMeta("No room • Create or join");
+    setChatUIEnabled(false);
+  }
+}
+
+// ✅ Call these in DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  bindChatUI();
+  initRoomFromURL();
+});
