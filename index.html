@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
+
+  <!-- ✅ Correct for GitHub Pages subfolder hosting -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -104,13 +106,13 @@
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
-              <a class="quickLink" href="https://www.icai.org/post/foundation-nset" target="_blank">
+              <a class="quickLink" href="https://www.icai.org/post/foundation-nset" target="_blank" rel="noopener">
                 ICAI Study Material
               </a>
-              <a class="quickLink" href="https://www.icai.org/post/rtp-foundation-course" target="_blank">
+              <a class="quickLink" href="https://www.icai.org/post/rtp-foundation-course" target="_blank" rel="noopener">
                 RTP
               </a>
-              <a class="quickLink" href="https://resource.cdn.icai.org/84774bos68243.pdf" target="_blank">
+              <a class="quickLink" href="https://resource.cdn.icai.org/84774bos68243.pdf" target="_blank" rel="noopener">
                 MTP
               </a>
             </div>
@@ -218,7 +220,18 @@
     </div>
   </div>
 
-  <!-- IMPORTANT: module for Firebase imports -->
+  <!-- ✅ Helps you see EXACT errors for Firebase/chat -->
+  <script>
+    window.addEventListener("error", (e) => {
+      console.error("Script error:", e.message, e.filename, e.lineno);
+    });
+    window.addEventListener("unhandledrejection", (e) => {
+      console.error("Promise rejection:", e.reason);
+    });
+  </script>
+
+  <!-- ✅ MUST be module if app.js uses Firebase modular imports -->
   <script type="module" src="./app.js?v=99"></script>
 </body>
 </html>
+
