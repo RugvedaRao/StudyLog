@@ -163,6 +163,39 @@
     </main>
   </div>
 
+  <!-- ✅ NEW: USER CAPTURE MODAL (Name + Email) -->
+  <!-- Required by app.js ids: userModal, userForm, userName, userEmail, userMsg -->
+  <div class="userModal hidden" id="userModal">
+    <div class="userPanel">
+      <div class="userTop">
+        <div class="userTitle">Welcome 👋</div>
+      </div>
+
+      <div class="userSub">
+        Enter your name & email to save your progress.
+      </div>
+
+      <form id="userForm" class="userForm">
+        <div class="userField">
+          <label for="userName">Name</label>
+          <input id="userName" type="text" placeholder="Your name" required />
+        </div>
+
+        <div class="userField">
+          <label for="userEmail">Email</label>
+          <input id="userEmail" type="email" placeholder="you@example.com" required />
+        </div>
+
+        <button class="userBtn" type="submit">Continue</button>
+        <div class="userMsg" id="userMsg"></div>
+
+        <div class="userConsent">
+          By continuing, you agree we may store your name & email to save your progress.
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- ✅ ALARM POPUP -->
   <div class="alarmOverlay hidden" id="alarmOverlay">
     <div class="alarmBox">
