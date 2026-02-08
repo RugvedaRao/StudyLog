@@ -10,7 +10,6 @@
   --green:#22c55e;
   --accent:#38bdf8;
 
-  /* surfaces */
   --cardGradTop: rgba(255,255,255,.045);
   --cardGradBot: rgba(255,255,255,.02);
   --tileBg: rgba(0,0,0,.18);
@@ -21,7 +20,6 @@
   --linkHover: rgba(56,189,248,.18);
 }
 
-/* ✅ Light theme overrides */
 body[data-theme="light"]{
   --bg:#f6f8ff;
   --text:#0b1020;
@@ -66,7 +64,6 @@ body{
   background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0));
 }
 
-/* Header ribbon */
 .hero{
   padding:22px 22px 18px;
   background: linear-gradient(90deg, rgba(34,197,94,.45), rgba(56,189,248,.45));
@@ -94,14 +91,12 @@ body{
   letter-spacing:.2px;
 }
 
-/* Ribbon actions */
 .hero-actions{
   display:flex;
   align-items:center;
   gap:12px;
 }
 
-/* Ribbon timer button */
 .ribbonTimerBtn{
   border:none;
   border-radius:999px;
@@ -114,11 +109,8 @@ body{
   border: 1px solid rgba(255,255,255,.18);
   backdrop-filter: blur(8px);
 }
-.ribbonTimerBtn:hover{
-  background: rgba(255,255,255,.10);
-}
+.ribbonTimerBtn:hover{ background: rgba(255,255,255,.10); }
 
-/* Countdown pill */
 .countdownPill{
   display:flex;
   align-items:center;
@@ -139,13 +131,10 @@ body{
   padding:2px 6px;
   border-radius: 10px;
 }
-.countdownPill:hover .time{
-  background: rgba(255,255,255,.08);
-}
+.countdownPill:hover .time{ background: rgba(255,255,255,.08); }
 
 .content{ padding:20px 22px 28px; }
 
-/* Quote Card */
 .quoteCard{
   margin-bottom:18px;
   padding:18px;
@@ -182,7 +171,6 @@ body{
   font-size:18px;
 }
 
-/* ✅ Theme toggle button */
 .themeToggle{
   margin-left:auto;
   display:inline-flex;
@@ -193,7 +181,6 @@ body{
   cursor:pointer;
   font-weight:900;
   font-size:13px;
-
   color: rgba(255,255,255,.92);
   background: rgba(0,0,0,.22);
   border: 1px solid rgba(255,255,255,.18);
@@ -207,7 +194,6 @@ body[data-theme="light"] .themeToggle{
 .themeIcon{ font-size:15px; line-height:1; }
 .themeText{ line-height:1; }
 
-/* Progress rings grid */
 .metersGrid{
   display:grid;
   grid-template-columns: repeat(4, 1fr);
@@ -237,9 +223,8 @@ body[data-theme="light"] .themeToggle{
   background: rgba(0,0,0,.16);
   border: 1px solid var(--softBorder);
 }
-body[data-theme="light"] .ring{
-  background: rgba(255,255,255,.70);
-}
+body[data-theme="light"] .ring{ background: rgba(255,255,255,.70); }
+
 .ring .pct{
   position:absolute;
   font-weight:900;
@@ -272,16 +257,13 @@ body[data-theme="light"] .ring{
   font-size:14px;
   color: rgba(255,255,255,.88);
 }
-body[data-theme="light"] .overallBelow{
-  color: rgba(0,0,0,.75);
-}
+body[data-theme="light"] .overallBelow{ color: rgba(0,0,0,.75); }
 .overallBelow span{
   color: var(--muted);
   font-weight:800;
   font-size:13px;
 }
 
-/* ✅ Extras grid aligned to 4 columns */
 .extrasGrid{
   margin-top:18px;
   display:grid;
@@ -289,14 +271,8 @@ body[data-theme="light"] .overallBelow{
   gap:14px;
   align-items:stretch;
 }
-.extrasSpacer{
-  background: transparent;
-  border:none;
-}
 
-/* =========================
-   To-Do List (2 columns wide)
-   ========================= */
+/* To-Do */
 .todoCard{
   grid-column: 1 / span 2;
   background: var(--tileBg);
@@ -308,10 +284,7 @@ body[data-theme="light"] .overallBelow{
   flex-direction:column;
   gap:12px;
 }
-.todoHeader{
-  font-weight:900;
-  font-size:16px;
-}
+.todoHeader{ font-weight:900; font-size:16px; }
 .todoInputRow{
   display:flex;
   gap:10px;
@@ -351,15 +324,160 @@ body[data-theme="light"] .overallBelow{
   border-radius:10px;
   font-weight:800;
 }
-body[data-theme="light"] .todoItem{
-  background: rgba(0,0,0,.04);
-}
+body[data-theme="light"] .todoItem{ background: rgba(0,0,0,.04); }
 .todoItem button{
   background:none;
   border:none;
   color:#ff6b6b;
   font-weight:900;
   cursor:pointer;
+}
+
+/* ✅ Study Room Chat (same tile style) */
+.chatCard{
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
+  border-radius:18px;
+  padding:16px;
+  min-height:210px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+.chatHeader{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.chatTitle{
+  font-weight:900;
+  font-size:16px;
+  color: var(--text);
+}
+.chatSub{
+  margin-top:4px;
+  font-weight:800;
+  font-size:12px;
+  color: var(--muted);
+}
+.chatStatus{
+  font-weight:900;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:999px;
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.92);
+}
+body[data-theme="light"] .chatStatus{
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(0,0,0,.12);
+  color: rgba(0,0,0,.78);
+}
+
+.chatActions{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.joinRow{
+  display:flex;
+  gap:10px;
+}
+.joinRow input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:12px;
+  border: 1px solid var(--softBorder);
+  background: var(--chipBg);
+  color: var(--text);
+  font-weight:800;
+  outline:none;
+}
+.smallBtn{
+  padding:10px 12px;
+  font-size:13px;
+  border-radius:12px;
+}
+
+.chatMessages{
+  flex:1;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding-right:4px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top:10px;
+}
+body[data-theme="light"] .chatMessages{
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+
+.chatMsg{
+  background: rgba(255,255,255,.05);
+  border-radius:12px;
+  padding:8px 10px;
+  border: 1px solid rgba(255,255,255,.06);
+}
+body[data-theme="light"] .chatMsg{
+  background: rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.06);
+}
+.chatMsgTop{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:4px;
+}
+.chatMsgName{
+  font-weight:900;
+  font-size:12px;
+  color: var(--text);
+}
+.chatMsgTime{
+  font-weight:800;
+  font-size:11px;
+  color: var(--muted);
+  white-space:nowrap;
+}
+.chatMsgText{
+  font-weight:800;
+  font-size:13px;
+  color: var(--text);
+  line-height:1.35;
+  word-wrap:break-word;
+}
+
+.chatInputRow{
+  display:flex;
+  gap:10px;
+}
+.chatInputRow input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:12px;
+  border: 1px solid var(--softBorder);
+  background: var(--chipBg);
+  color: var(--text);
+  font-weight:800;
+  outline:none;
+}
+.chatInputRow button{
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:900;
+  cursor:pointer;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  color:#061223;
+}
+.chatHint{
+  font-weight:800;
+  font-size:12px;
+  color: var(--muted);
+  text-align:center;
 }
 
 /* Quick Links */
@@ -396,7 +514,7 @@ body[data-theme="light"] .todoItem{
   transform: translateX(4px);
 }
 
-/* Subject screen list */
+/* Subject screen */
 .topbar{
   display:flex;
   justify-content:space-between;
@@ -477,7 +595,6 @@ body[data-theme="light"] .back{
   cursor:pointer;
 }
 
-/* ✅ Actions row (Done pushed to right) */
 .actions{
   display:flex;
   gap:10px;
@@ -485,12 +602,8 @@ body[data-theme="light"] .back{
   flex-wrap:wrap;
   align-items:center;
 }
+.actionsSpacer{ flex: 1 1 auto; }
 
-.actionsSpacer{
-  flex: 1 1 auto;
-}
-
-/* Buttons */
 button{
   border:none;
   border-radius: 10px;
@@ -514,7 +627,7 @@ body[data-theme="light"] button.secondary{
 
 .hidden{ display:none !important; }
 
-/* ===== Study Timer ===== */
+/* Timer Modal */
 .timerModal{
   position:fixed;
   inset:0;
@@ -674,9 +787,7 @@ body[data-theme="light"] .alarmBox{
   font-size:14px;
   margin-bottom:14px;
 }
-body[data-theme="light"] .alarmMsg{
-  color: rgba(0,0,0,.70);
-}
+body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
 .alarmOk{
   width:100%;
   border:none;
@@ -690,32 +801,7 @@ body[data-theme="light"] .alarmMsg{
 }
 .alarmOk:hover{ filter: brightness(1.05); }
 
-/* Responsive */
-@media (max-width: 980px){
-  .metersGrid{ grid-template-columns: repeat(2, 1fr); }
-  .extrasGrid{ grid-template-columns: repeat(2, 1fr); }
-
-  .todoCard{ grid-column: 1 / span 2; }
-  .extrasSpacer{ display:none; }
-  .quickLinksCard{ grid-column: 1 / span 2; min-height: unset; }
-}
-
-@media (max-width: 520px){
-  .metersGrid{ grid-template-columns: 1fr; }
-  .extrasGrid{ grid-template-columns: 1fr; }
-
-  .todoCard{ grid-column: auto; }
-  .quickLinksCard{ grid-column: auto; }
-
-  .ring{ width:128px; height:128px; }
-  .ring .pct{ font-size:24px; }
-}
-/* =========================
-   ADD THIS (User Capture Modal)
-   Paste near your Timer Modal CSS section (after .timerModal styles is fine)
-   ========================= */
-
-/* User Capture Modal Overlay */
+/* User Capture Modal */
 .userModal{
   position:fixed;
   inset:0;
@@ -724,10 +810,9 @@ body[data-theme="light"] .alarmMsg{
   display:flex;
   align-items:center;
   justify-content:center;
-  z-index:99999; /* above app, below alarm */
+  z-index:99999;
   padding:18px;
 }
-
 .userPanel{
   width:min(520px, 100%);
   border-radius:22px;
@@ -736,40 +821,30 @@ body[data-theme="light"] .alarmMsg{
   box-shadow: 0 20px 50px rgba(0,0,0,.55);
   padding:18px;
 }
-
 body[data-theme="light"] .userPanel{
   border: 1px solid rgba(0,0,0,.12);
   background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.80));
   box-shadow: 0 20px 50px rgba(0,0,0,.18);
 }
-
 .userTop{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:10px;
 }
-
-.userTitle{
-  font-weight:900;
-  font-size:18px;
-  color: var(--text);
-}
-
+.userTitle{ font-weight:900; font-size:18px; color: var(--text); }
 .userSub{
   margin-top:10px;
   font-weight:800;
   font-size:13px;
   color: var(--muted);
 }
-
 .userForm{
   margin-top:14px;
   display:flex;
   flex-direction:column;
   gap:12px;
 }
-
 .userField label{
   display:block;
   font-weight:800;
@@ -777,7 +852,6 @@ body[data-theme="light"] .userPanel{
   color: var(--muted);
   margin-bottom:6px;
 }
-
 .userField input{
   width:100%;
   padding:12px 12px;
@@ -789,7 +863,6 @@ body[data-theme="light"] .userPanel{
   font-size:16px;
   outline:none;
 }
-
 .userBtn{
   width:100%;
   border:none;
@@ -801,9 +874,7 @@ body[data-theme="light"] .userPanel{
   color:#061223;
   background: linear-gradient(90deg, var(--green), var(--accent));
 }
-
 .userBtn:hover{ filter: brightness(1.05); }
-
 .userMsg{
   min-height:18px;
   text-align:center;
@@ -811,7 +882,6 @@ body[data-theme="light"] .userPanel{
   font-size:13px;
   color: var(--muted);
 }
-
 .userConsent{
   margin-top:2px;
   text-align:center;
@@ -819,4 +889,23 @@ body[data-theme="light"] .userPanel{
   font-size:12px;
   color: var(--muted);
   opacity:.95;
+}
+
+/* Responsive */
+@media (max-width: 980px){
+  .metersGrid{ grid-template-columns: repeat(2, 1fr); }
+  .extrasGrid{ grid-template-columns: repeat(2, 1fr); }
+  .todoCard{ grid-column: 1 / span 2; }
+  .chatCard{ grid-column: 1 / span 2; min-height: unset; }
+  .quickLinksCard{ grid-column: 1 / span 2; min-height: unset; }
+}
+
+@media (max-width: 520px){
+  .metersGrid{ grid-template-columns: 1fr; }
+  .extrasGrid{ grid-template-columns: 1fr; }
+  .todoCard{ grid-column: auto; }
+  .chatCard{ grid-column: auto; }
+  .quickLinksCard{ grid-column: auto; }
+  .ring{ width:128px; height:128px; }
+  .ring .pct{ font-size:24px; }
 }
