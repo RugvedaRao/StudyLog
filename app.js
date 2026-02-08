@@ -90,20 +90,17 @@ const EXAM_DATE_KEY = "ca_exam_date_v3";
 const TODO_KEY = "ca_todo_list_v1";
 const THEME_KEY = "ca_theme_v1";
 
-// ✅ NEW: user capture
+// ✅ User capture
 const USER_KEY = "ca_user_v1";
 
-// ✅ Choose ONE endpoint:
-// Formspree:
-// const LEAD_ENDPOINT = "https://formspree.io/f/YOUR_FORM_ID";
-// Google Apps Script:
-const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnYgd-b68OiIzrneDxgPJMcOnvGTfvMYzAk9uwJGZQjOSOKrCDYGOHXC1DjawR7tF2DA/exec";
+// ✅ Google Apps Script Web App URL (your new one)
+const LEAD_ENDPOINT = "https://script.google.com/macros/s/AKfycbzGABxUAcwHSLfTU8-iowS5evscDgAOGQgbRcU8VB4Ps7YQalwG_BOtRX-PSFlopPxxMQ/exec";
 
 const $ = (id) => document.getElementById(id);
 function safeParse(x){ try { return JSON.parse(x); } catch { return null; } }
 
 // ============================
-// ✅ NEW: User Capture (Name + Email)
+// ✅ User Capture (Name + Email)
 // Requires these HTML ids:
 // userModal, userForm, userName, userEmail, userMsg
 // ============================
@@ -120,20 +117,29 @@ function isValidEmail(email){
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+/**
+ * IMPORTANT:
+ * For Apps Script web apps, FormData is the most reliable (avoids CORS/JSON issues).
+ * Your Apps Script should read e.parameter.name / e.parameter.email.
+ */
 async function sendLeadToServer(user){
   if(!LEAD_ENDPOINT || LEAD_ENDPOINT.includes("YOUR_")) return;
 
+  const fd = new FormData();
+  fd.append("name", user.name);
+  fd.append("email", user.email);
+  fd.append("source", "CA Foundation Tracker");
+  fd.append("page", location.href);
+
   try{
-    await fetch(LEAD_ENDPOINT, {
+    const res = await fetch(LEAD_ENDPOINT, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
-      body: JSON.stringify({
-        name: user.name,
-        email: user.email,
-        source: "CA Foundation Tracker",
-        ts: new Date().toISOString()
-      })
+      body: fd
     });
+
+    // Optional: for debugging only
+    // const txt = await res.text();
+    // console.log("Lead server response:", txt);
   }catch(err){
     console.warn("Lead submit failed:", err);
   }
@@ -178,7 +184,7 @@ function bindUserCapture(){
     if(msgEl) msgEl.textContent = "Saved ✅";
     closeUserCapture();
 
-    // fire-and-forget send
+    // send to Google Sheet
     sendLeadToServer(user);
   });
 }
@@ -748,7 +754,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Theme
   initTheme();
 
-  // ✅ NEW: User capture (Name + Email)
+  // ✅ User capture (Name + Email)
   initUserCapture();
 
   // ✅ Done button -> Home (inline right)
