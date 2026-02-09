@@ -1,5 +1,6 @@
 // ============================
 // CA Foundation Tracker + Shareable Study Rooms (FULL)
+// (Updated: chat uses createdAtMs for reliable ordering)
 // ============================
 
 // ----------------------------
@@ -135,6 +136,7 @@ function bindUserCapture(){
     closeUserCapture();
   });
 }
+
 function initUserCapture(){
   bindUserCapture();
   if(!loadUser()) openUserCapture();
@@ -593,30 +595,20 @@ function bindTodo(){
 
 // ============================
 // ✅ SHAREABLE STUDY ROOMS (Firestore)
+// Updated: messages ordered by createdAtMs (no serverTimestamp ordering)
 // ============================
 
-// ✅ Firebase config
+// ✅ Your Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBtwjeGsQfrT8kBRyA45d1ajwFX0q8qTWk",
   authDomain: "ca-study-rooms.firebaseapp.com",
   projectId: "ca-study-rooms",
-  storageBucket: "ca-study-rooms.appspot.com", // (bucket name doesn't affect Firestore; but keep standard)
+  storageBucket: "ca-study-rooms.appspot.com",
   messagingSenderId: "95273803267",
   appId: "1:95273803267:web:9795448f0fffff79e98b836"
 };
 
-// One-time Firebase imports
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getFirestore,
-  doc, setDoc, serverTimestamp,
-  collection, query, orderBy, limit, onSnapshot,
-  addDoc
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const fbApp = initializeApp(firebaseConfig);
-const db = getFirestore(fbApp);
-
+let db = null;
 let unsubMessages = null;
 let activeRoomId = null;
 
@@ -629,16 +621,9 @@ function randomRoomId(){
   return out;
 }
 
-function normalizeRoomId(roomId){
-  const r = String(roomId || "").trim().toLowerCase();
-  // allow only a-z 0-9 - _
-  const cleaned = r.replace(/[^a-z0-9_-]/g, "");
-  return cleaned || null;
-}
-
 function getRoomFromURL(){
   const u = new URL(location.href);
-  return normalizeRoomId(u.searchParams.get("room"));
+  return (u.searchParams.get("room") || "").trim() || null;
 }
 function setRoomInURL(roomId){
   const u = new URL(location.href);
@@ -656,16 +641,13 @@ function setChatUIEnabled(enabled){
   $("chatSendBtn") && ($("chatSendBtn").disabled = !enabled);
   $("copyRoomLinkBtn") && ($("copyRoomLinkBtn").disabled = !enabled);
 }
-
 function setChatStatus(text){ $("chatStatus") && ($("chatStatus").textContent = text); }
 function setRoomMeta(text){ $("chatRoomMeta") && ($("chatRoomMeta").textContent = text); }
 
-function formatTime(ts){
+function formatTimeFromMs(ms){
+  if(!ms) return "";
   try{
-    if(!ts) return "";
-    const d = ts.toDate ? ts.toDate() : (ts.seconds ? new Date(ts.seconds * 1000) : null);
-    if(!d) return "";
-    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }catch{
     return "";
   }
@@ -678,12 +660,12 @@ function renderChatMessages(msgs){
   list.innerHTML = msgs.map(m => {
     const name = escapeHTML(m.name || "Student");
     const text = escapeHTML(m.text || "");
-    const time = formatTime(m.createdAt);
+    const time = escapeHTML(formatTimeFromMs(m.createdAtMs));
     return `
       <div class="chatMsg">
         <div class="chatMsgTop">
           <div class="chatMsgName">${name}</div>
-          <div class="chatMsgTime">${escapeHTML(time)}</div>
+          <div class="chatMsgTime">${time}</div>
         </div>
         <div class="chatMsgText">${text}</div>
       </div>
@@ -693,37 +675,44 @@ function renderChatMessages(msgs){
   list.scrollTop = list.scrollHeight;
 }
 
-async function joinRoom(roomId){
-  const rid = normalizeRoomId(roomId);
-  if(!rid){
-    alert("Invalid room code.");
-    return;
-  }
+async function initFirebase(){
+  if(db) return db;
 
-  // stop old listener
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+  const app = initializeApp(firebaseConfig);
+  db = getFirestore(app);
+  return db;
+}
+
+async function joinRoom(roomId){
+  roomId = (roomId || "").trim().toLowerCase();
+  if(!roomId) return;
+
+  await initFirebase();
+
+  const {
+    doc, setDoc,
+    collection, query, orderBy, limit, onSnapshot
+  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
   if(unsubMessages){ unsubMessages(); unsubMessages = null; }
 
-  activeRoomId = rid;
-  setRoomInURL(rid);
+  activeRoomId = roomId;
+  setRoomInURL(roomId);
 
   setChatStatus("Live ✅");
-  setRoomMeta(`Room: ${rid} • Share link to invite friends`);
+  setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
   setChatUIEnabled(true);
 
-  // Ensure room doc exists
-  try{
-    await setDoc(doc(db, "rooms", rid), { createdAt: serverTimestamp() }, { merge: true });
-  }catch(e){
-    console.error("Room create failed:", e);
-    setChatStatus("Offline");
-    setRoomMeta("Permission error (check Firestore rules)");
-    setChatUIEnabled(false);
-    return;
-  }
+  // create room doc (safe)
+  await setDoc(doc(db, "rooms", roomId), { createdAtMs: Date.now() }, { merge: true });
 
+  // ✅ order by createdAtMs (works reliably)
   const q = query(
-    collection(db, "rooms", rid, "messages"),
-    orderBy("createdAt", "desc"),
+    collection(db, "rooms", roomId, "messages"),
+    orderBy("createdAtMs", "desc"),
     limit(80)
   );
 
@@ -731,7 +720,7 @@ async function joinRoom(roomId){
     const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
     renderChatMessages(docs);
   }, (err) => {
-    console.error("Chat listener error:", err);
+    console.warn("Chat listener error:", err);
     setChatStatus("Offline");
   });
 }
@@ -748,14 +737,18 @@ async function sendChatMessage(){
 
   input.value = "";
 
+  await initFirebase();
+
+  const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
   try{
     await addDoc(collection(db, "rooms", activeRoomId, "messages"), {
       name,
       text: text.slice(0, 220),
-      createdAt: serverTimestamp()
+      createdAtMs: Date.now() // ✅ reliable
     });
   }catch(err){
-    console.error("Send failed:", err);
+    console.warn("Send failed:", err);
     setChatStatus("Send failed");
     setTimeout(() => setChatStatus("Live ✅"), 1200);
   }
