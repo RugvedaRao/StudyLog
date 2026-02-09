@@ -1,10 +1,10 @@
 // ============================
 // CA Foundation Tracker + Public Discussion Forum (FULL)
 // UPDATED:
-// ✅ "Public Study Room" replaced with "Public Discussion Forum"
+// ✅ Public Study Room replaced with Public Discussion Forum
 // ✅ No Room Create/Join/Copy link logic
-// ✅ Only 1 global public chat (Firestore) with previous chats + send
-// ✅ Designed to be opened via a single sidebar button (left of theme toggle)
+// ✅ One global public forum (Firestore)
+// ✅ Forum screen: input on top, messages below
 // ✅ Chat ordering uses createdAtMs (reliable)
 // ============================
 
@@ -307,7 +307,7 @@ let currentSubject = null;
 
 function showHome(){
   $("subjectScreen")?.classList.add("hidden");
-  $("forumScreen")?.classList.add("hidden"); // ✅ forum screen
+  $("forumScreen")?.classList.add("hidden");
   $("homeScreen")?.classList.remove("hidden");
   currentSubject = null;
   renderHome();
@@ -315,7 +315,7 @@ function showHome(){
 function openSubject(subj){
   currentSubject = subj;
   $("homeScreen")?.classList.add("hidden");
-  $("forumScreen")?.classList.add("hidden"); // ✅ forum screen
+  $("forumScreen")?.classList.add("hidden");
   $("subjectScreen")?.classList.remove("hidden");
   renderSubject();
 }
@@ -616,7 +616,7 @@ const firebaseConfig = {
 let db = null;
 let unsubForum = null;
 
-// ✅ single global forum id (no rooms)
+// ✅ single global forum id
 const FORUM_ID = "public_discussion_forum";
 
 function setForumUIEnabled(enabled){
@@ -667,20 +667,18 @@ async function initFirebase(){
   return db;
 }
 
-// ✅ Open forum screen (called when sidebar button clicked)
+// ✅ Open forum screen
 function showForum(){
   $("homeScreen")?.classList.add("hidden");
   $("subjectScreen")?.classList.add("hidden");
   $("forumScreen")?.classList.remove("hidden");
 
-  // connect listener lazily (only when forum opened)
   connectForum().catch(err => {
     console.error("Forum connect failed:", err);
     alert("Forum connect failed: " + (err?.message || String(err)));
   });
 }
 
-// ✅ optional: back button on forum screen can call this
 function hideForum(){
   $("forumScreen")?.classList.add("hidden");
   showHome();
@@ -697,7 +695,6 @@ async function connectForum(){
 
     if(unsubForum){ unsubForum(); unsubForum = null; }
 
-    // Ensure forum doc exists
     await setDoc(doc(db, "forums", FORUM_ID), { createdAtMs: Date.now() }, { merge: true });
 
     setForumStatus("Live ✅");
@@ -756,20 +753,14 @@ async function sendForumMessage(){
 }
 
 function bindForumUI(){
-  // ✅ Sidebar button near theme toggle (you must create this element in HTML)
-  // Example HTML id: <button id="forumNavBtn">Public Discussion Forum</button>
   $("forumNavBtn")?.addEventListener("click", showForum);
-
-  // ✅ Forum back button (optional)
   $("forumBackBtn")?.addEventListener("click", hideForum);
 
-  // ✅ send
   $("forumSendBtn")?.addEventListener("click", sendForumMessage);
   $("forumInput")?.addEventListener("keydown", (e) => {
     if(e.key === "Enter") sendForumMessage();
   });
 
-  // default UI state
   setForumStatus("Offline");
   setForumUIEnabled(false);
 }
