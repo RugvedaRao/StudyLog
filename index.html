@@ -76,8 +76,7 @@
               <div class="todoList" id="todoList"></div>
             </div>
 
-            <!-- ✅ REMOVED: Public Study Room card -->
-            <!-- ✅ Quick Links stays -->
+            <!-- Quick Links -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -95,28 +94,22 @@
         </div>
       </section>
 
-      <!-- ✅ PUBLIC DISCUSSION FORUM SCREEN -->
+      <!-- ✅ PUBLIC DISCUSSION FORUM SCREEN (Input TOP, messages BELOW) -->
       <section id="forumScreen" class="hidden">
         <div class="card">
           <div class="topbar">
             <div class="back" id="forumBackBtn">← Back</div>
-            <div class="subjectMini">Public Discussion Forum</div>
           </div>
 
-          <div class="chatHeader">
-            <div>
-              <div class="chatTitle">Public Discussion Forum</div>
-              <div class="chatSub">Ask doubts, help others, stay consistent ✅</div>
-            </div>
-            <div class="chatStatus" id="forumStatus">Offline</div>
+          <div class="chatInputRow">
+            <input type="text" id="forumInput" placeholder="Type your message…" maxlength="220" disabled />
+            <button id="forumSendBtn" type="button" disabled>Send</button>
           </div>
 
           <div class="chatMessages" id="forumMessages"></div>
 
-          <div class="chatInputRow">
-            <input type="text" id="forumInput" placeholder="Type a message…" maxlength="220" disabled />
-            <button id="forumSendBtn" type="button" disabled>Send</button>
-          </div>
+          <!-- hidden status for JS safety -->
+          <div id="forumStatus" class="hidden">Offline</div>
         </div>
       </section>
 
@@ -231,8 +224,6 @@
   </script>
 
   <!-- ✅ MUST be module if app.js uses Firebase modular imports -->
-  <script type="module" src="./app.js?v=100"></script>
+  <script type="module" src="./app.js?v=101"></script>
 </body>
 </html>
-
-
