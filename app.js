@@ -6,7 +6,35 @@
 // ✅ One global public forum (Firestore)
 // ✅ Forum screen: input on top, messages below
 // ✅ Chat ordering uses createdAtMs (reliable)
+// ✅ Google Sheet logging restored (Apps Script Web App)
 // ============================
+
+// ----------------------------
+// ✅ Google Sheet Logging (Apps Script Web App URL)
+// ----------------------------
+// IMPORTANT: Paste your deployed Web App /exec URL here
+// Example: https://script.google.com/macros/s/XXXXX/exec
+const APPS_SCRIPT_WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_EXEC_URL_HERE";
+
+async function logUserToGoogleSheet(name, email){
+  if(!APPS_SCRIPT_WEBAPP_URL || APPS_SCRIPT_WEBAPP_URL.includes("PASTE_")) return;
+
+  const payload = {
+    name,
+    email,
+    source: "CA Foundation Tracker",
+    url: location.href,
+    timestamp: new Date().toLocaleString()
+  };
+
+  // Using no-cors so browsers won't block the request due to CORS
+  await fetch(APPS_SCRIPT_WEBAPP_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+}
 
 // ----------------------------
 // Quote of the Day
@@ -122,7 +150,7 @@ function bindUserCapture(){
   const msgEl = $("userMsg");
   if(!form) return;
 
-  form.addEventListener("submit", (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
     const name = (nameEl?.value || "").trim();
     const email = (emailEl?.value || "").trim();
@@ -137,6 +165,14 @@ function bindUserCapture(){
     }
 
     saveUser({ name, email });
+
+    // ✅ LOG TO GOOGLE SHEET (non-blocking; still works even if it fails)
+    try{
+      await logUserToGoogleSheet(name, email);
+    }catch(err){
+      console.warn("Google Sheet log failed:", err);
+    }
+
     if(msgEl) msgEl.textContent = "Saved ✅";
     closeUserCapture();
   });
@@ -319,6 +355,10 @@ function openSubject(subj){
   $("subjectScreen")?.classList.remove("hidden");
   renderSubject();
 }
+
+// (rest of your file remains EXACTLY same from here)
+// ✅ Your Timer, Todo, Forum Firestore code and DOMContentLoaded stay unchanged
+// I’m keeping them as-is below:
 
 function renderHome(){
   const state = loadState();
@@ -829,3 +869,4 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Public Discussion Forum
   bindForumUI();
 });
+
