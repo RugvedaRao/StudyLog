@@ -168,15 +168,13 @@ body{
 }
 .titleRow .title{ font-weight:900; font-size:18px; }
 
-/* ✅ NEW: wrapper on right side of title row (Forum button + theme toggle) */
+/* ✅ Right side wrapper (Forum button + theme toggle) */
 .titleRowRight{
   display:flex;
   align-items:center;
   gap:10px;
   margin-left:auto;
 }
-
-/* Forum nav button uses existing .secondary + .smallBtn styles (from HTML) */
 
 .themeToggle{
   display:inline-flex;
@@ -314,33 +312,11 @@ body[data-theme="light"] .todoItem{ background: rgba(0,0,0,.04); }
   cursor:pointer;
 }
 
-/* ✅ REMOVED: .chatCard room-specific styles are no longer needed.
-   ✅ BUT we KEEP all chat UI styles (.chatHeader, .chatMessages, etc.)
-   so the forum screen looks the same. */
-
-/* Chat UI (used by Public Discussion Forum screen) */
-.chatHeader{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-.chatTitle{ font-weight:900; font-size:16px; color: var(--text); }
-.chatSub{ margin-top:4px; font-weight:800; font-size:12px; color: var(--muted); }
-.chatStatus{
-  font-weight:900;
-  font-size:12px;
-  padding:6px 10px;
-  border-radius:999px;
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(255,255,255,.92);
-}
-body[data-theme="light"] .chatStatus{
-  background: rgba(255,255,255,.85);
-  border: 1px solid rgba(0,0,0,.12);
-  color: rgba(0,0,0,.78);
-}
-
+/* Chat UI (reused by Forum) */
 .smallBtn{ padding:10px 12px; font-size:13px; border-radius:12px; }
 
 .chatMessages{
-  height: min(520px, 62vh); /* ✅ gives forum screen a nice chat area */
+  height: min(520px, 62vh);
   overflow-y:auto;
   display:flex;
   flex-direction:column;
@@ -348,7 +324,6 @@ body[data-theme="light"] .chatStatus{
   padding-right:4px;
   border-top: 1px solid rgba(255,255,255,.08);
   padding-top:10px;
-  margin-top:10px;
 }
 body[data-theme="light"] .chatMessages{ border-top: 1px solid rgba(0,0,0,.08); }
 
@@ -367,7 +342,7 @@ body[data-theme="light"] .chatMsg{
 .chatMsgTime{ font-weight:800; font-size:11px; color: var(--muted); white-space:nowrap; }
 .chatMsgText{ font-weight:800; font-size:13px; color: var(--text); line-height:1.35; word-wrap:break-word; }
 
-.chatInputRow{ display:flex; gap:10px; margin-top:12px; }
+.chatInputRow{ display:flex; gap:10px; margin-top:0; }
 .chatInputRow input{
   flex:1;
   padding:10px 12px;
@@ -386,6 +361,20 @@ body[data-theme="light"] .chatMsg{
   cursor:pointer;
   background: linear-gradient(90deg, var(--green), var(--accent));
   color:#061223;
+}
+
+/* ✅ Forum layout: input on top, messages below */
+#forumScreen .chatInputRow{
+  margin-top: 0;
+}
+#forumScreen .chatMessages{
+  border-top: 1px solid rgba(255,255,255,.08);
+  margin-top: 12px;
+  padding-top: 12px;
+  height: min(520px, 62vh);
+}
+body[data-theme="light"] #forumScreen .chatMessages{
+  border-top: 1px solid rgba(0,0,0,.08);
 }
 
 /* Quick Links */
@@ -611,8 +600,6 @@ body[data-theme="light"] button.secondary{
   .extrasGrid{ grid-template-columns: repeat(2, 1fr); }
   .todoCard{ grid-column: 1 / span 2; }
   .quickLinksCard{ grid-column: 1 / span 2; min-height: unset; }
-
-  /* forum screen chat height still fine on smaller screens */
   .chatMessages{ height: min(520px, 55vh); }
 }
 @media (max-width: 520px){
@@ -621,5 +608,3 @@ body[data-theme="light"] button.secondary{
   .todoCard, .quickLinksCard{ grid-column:auto; }
   .titleRowRight{ flex-wrap:wrap; justify-content:flex-end; }
 }
-
-
