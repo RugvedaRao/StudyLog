@@ -14,7 +14,7 @@
 // ----------------------------
 // IMPORTANT: Paste your deployed Web App /exec URL here
 // Example: https://script.google.com/macros/s/XXXXX/exec
-const APPS_SCRIPT_WEBAPP_URL = "PASTE_YOUR_APPS_SCRIPT_WEBAPP_EXEC_URL_HERE";
+const APPS_SCRIPT_WEBAPP_URL = "https://script.google.com/macros/s/AKfycbxvAy_BvXUTcOknFET8ppT6N1r0_eRmcNlCt_KJEijRPsw_ldxsmKycW_nwvxVSc-faTA/exec";
 
 async function logUserToGoogleSheet(name, email){
   if(!APPS_SCRIPT_WEBAPP_URL || APPS_SCRIPT_WEBAPP_URL.includes("PASTE_")) return;
