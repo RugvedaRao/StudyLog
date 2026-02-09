@@ -39,10 +39,17 @@
           <div class="titleRow">
             <div class="title">Progress</div>
 
-            <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">
-              <span class="themeIcon" id="themeIcon">🌙</span>
-              <span class="themeText" id="themeText">Dark</span>
-            </button>
+            <!-- ✅ LEFT of theme toggle: Public Discussion Forum button -->
+            <div class="titleRowRight">
+              <button class="secondary smallBtn" id="forumNavBtn" type="button" aria-label="Open Public Discussion Forum">
+                Public Discussion Forum
+              </button>
+
+              <button class="themeToggle" id="themeToggle" type="button" aria-label="Toggle theme">
+                <span class="themeIcon" id="themeIcon">🌙</span>
+                <span class="themeText" id="themeText">Dark</span>
+              </button>
+            </div>
           </div>
 
           <!-- Progress Rings -->
@@ -69,40 +76,8 @@
               <div class="todoList" id="todoList"></div>
             </div>
 
-            <!-- ✅ Public Study Room -->
-            <div class="chatCard" id="chatCard">
-              <div class="chatHeader">
-                <div>
-                  <div class="chatTitle">Public Study Room</div>
-                  <div class="chatSub" id="chatRoomMeta">No room selected</div>
-                </div>
-                <div class="chatStatus" id="chatStatus">Offline</div>
-              </div>
-
-              <div class="chatActions">
-                <button class="secondary smallBtn" id="createRoomBtn" type="button">Create Room</button>
-
-                <div class="joinRow">
-                  <input id="joinRoomInput" type="text" placeholder="Enter room code" maxlength="32" />
-                  <button class="secondary smallBtn" id="joinRoomBtn" type="button">Join</button>
-                </div>
-
-                <button class="secondary smallBtn" id="copyRoomLinkBtn" type="button" disabled>Copy Link</button>
-              </div>
-
-              <div class="chatMessages" id="chatMessages"></div>
-
-              <div class="chatInputRow">
-                <input type="text" id="chatInput" placeholder="Type your doubt/message…" maxlength="220" disabled />
-                <button id="chatSendBtn" type="button" disabled>Send</button>
-              </div>
-
-              <div class="chatHint" id="chatHint">
-                Create a room and share the link with your study mates.
-              </div>
-            </div>
-
-            <!-- Quick Links -->
+            <!-- ✅ REMOVED: Public Study Room card -->
+            <!-- ✅ Quick Links stays -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -116,6 +91,31 @@
                 MTP
               </a>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ✅ PUBLIC DISCUSSION FORUM SCREEN -->
+      <section id="forumScreen" class="hidden">
+        <div class="card">
+          <div class="topbar">
+            <div class="back" id="forumBackBtn">← Back</div>
+            <div class="subjectMini">Public Discussion Forum</div>
+          </div>
+
+          <div class="chatHeader">
+            <div>
+              <div class="chatTitle">Public Discussion Forum</div>
+              <div class="chatSub">Ask doubts, help others, stay consistent ✅</div>
+            </div>
+            <div class="chatStatus" id="forumStatus">Offline</div>
+          </div>
+
+          <div class="chatMessages" id="forumMessages"></div>
+
+          <div class="chatInputRow">
+            <input type="text" id="forumInput" placeholder="Type a message…" maxlength="220" disabled />
+            <button id="forumSendBtn" type="button" disabled>Send</button>
           </div>
         </div>
       </section>
@@ -220,7 +220,7 @@
     </div>
   </div>
 
-  <!-- ✅ Helps you see EXACT errors for Firebase/chat -->
+  <!-- ✅ Helps you see EXACT errors -->
   <script>
     window.addEventListener("error", (e) => {
       console.error("Script error:", e.message, e.filename, e.lineno);
@@ -231,7 +231,8 @@
   </script>
 
   <!-- ✅ MUST be module if app.js uses Firebase modular imports -->
-  <script type="module" src="./app.js?v=99"></script>
+  <script type="module" src="./app.js?v=100"></script>
 </body>
 </html>
+
 
