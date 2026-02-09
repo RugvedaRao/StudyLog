@@ -1,8 +1,11 @@
 // ============================
-// CA Foundation Tracker + Shareable Study Rooms (FULL)
-// FIXED: Share links always point to GitHub Pages (PUBLIC_BASE_URL)
-// FIXED: Join/Create shows errors (no silent failure)
-// FIXED: Chat ordering uses createdAtMs (reliable)
+// CA Foundation Tracker + Public Discussion Forum (FULL)
+// UPDATED:
+// ✅ "Public Study Room" replaced with "Public Discussion Forum"
+// ✅ No Room Create/Join/Copy link logic
+// ✅ Only 1 global public chat (Firestore) with previous chats + send
+// ✅ Designed to be opened via a single sidebar button (left of theme toggle)
+// ✅ Chat ordering uses createdAtMs (reliable)
 // ============================
 
 // ----------------------------
@@ -304,6 +307,7 @@ let currentSubject = null;
 
 function showHome(){
   $("subjectScreen")?.classList.add("hidden");
+  $("forumScreen")?.classList.add("hidden"); // ✅ forum screen
   $("homeScreen")?.classList.remove("hidden");
   currentSubject = null;
   renderHome();
@@ -311,6 +315,7 @@ function showHome(){
 function openSubject(subj){
   currentSubject = subj;
   $("homeScreen")?.classList.add("hidden");
+  $("forumScreen")?.classList.add("hidden"); // ✅ forum screen
   $("subjectScreen")?.classList.remove("hidden");
   renderSubject();
 }
@@ -595,11 +600,8 @@ function bindTodo(){
 }
 
 // ============================
-// ✅ SHAREABLE STUDY ROOMS (Firestore)
+// ✅ PUBLIC DISCUSSION FORUM (Firestore)
 // ============================
-
-// IMPORTANT: GitHub Pages public URL (ALWAYS use this for share links)
-const PUBLIC_BASE_URL = "https://rugvedarao.github.io/StudyLog/";
 
 // Firebase config
 const firebaseConfig = {
@@ -612,50 +614,16 @@ const firebaseConfig = {
 };
 
 let db = null;
-let unsubMessages = null;
-let activeRoomId = null;
+let unsubForum = null;
 
-function randomRoomId(){
-  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
-  let out = "";
-  for(let i=0;i<8;i++){
-    out += alphabet[Math.floor(Math.random() * alphabet.length)];
-  }
-  return out;
-}
+// ✅ single global forum id (no rooms)
+const FORUM_ID = "public_discussion_forum";
 
-function normalizeRoomId(roomId){
-  const r = String(roomId || "").trim().toLowerCase();
-  const cleaned = r.replace(/[^a-z0-9_-]/g, "");
-  return cleaned || null;
+function setForumUIEnabled(enabled){
+  $("forumInput") && ($("forumInput").disabled = !enabled);
+  $("forumSendBtn") && ($("forumSendBtn").disabled = !enabled);
 }
-
-function getRoomFromURL(){
-  const u = new URL(location.href);
-  return normalizeRoomId(u.searchParams.get("room"));
-}
-
-// ✅ Always update URL on the PUBLIC site path
-function setRoomInURL(roomId){
-  const u = new URL(PUBLIC_BASE_URL);
-  u.searchParams.set("room", roomId);
-  history.replaceState({}, "", u.toString());
-}
-
-// ✅ Always generate share link on the PUBLIC site path
-function makeShareLink(roomId){
-  const u = new URL(PUBLIC_BASE_URL);
-  u.searchParams.set("room", roomId);
-  return u.toString();
-}
-
-function setChatUIEnabled(enabled){
-  $("chatInput") && ($("chatInput").disabled = !enabled);
-  $("chatSendBtn") && ($("chatSendBtn").disabled = !enabled);
-  $("copyRoomLinkBtn") && ($("copyRoomLinkBtn").disabled = !enabled);
-}
-function setChatStatus(text){ $("chatStatus") && ($("chatStatus").textContent = text); }
-function setRoomMeta(text){ $("chatRoomMeta") && ($("chatRoomMeta").textContent = text); }
+function setForumStatus(text){ $("forumStatus") && ($("forumStatus").textContent = text); }
 
 function formatTimeFromMs(ms){
   if(!ms) return "";
@@ -666,8 +634,8 @@ function formatTimeFromMs(ms){
   }
 }
 
-function renderChatMessages(msgs){
-  const list = $("chatMessages");
+function renderForumMessages(msgs){
+  const list = $("forumMessages");
   if(!list) return;
 
   list.innerHTML = msgs.map(m => {
@@ -699,13 +667,26 @@ async function initFirebase(){
   return db;
 }
 
-async function joinRoom(roomId){
-  const rid = normalizeRoomId(roomId);
-  if(!rid){
-    alert("Invalid room code.");
-    return;
-  }
+// ✅ Open forum screen (called when sidebar button clicked)
+function showForum(){
+  $("homeScreen")?.classList.add("hidden");
+  $("subjectScreen")?.classList.add("hidden");
+  $("forumScreen")?.classList.remove("hidden");
 
+  // connect listener lazily (only when forum opened)
+  connectForum().catch(err => {
+    console.error("Forum connect failed:", err);
+    alert("Forum connect failed: " + (err?.message || String(err)));
+  });
+}
+
+// ✅ optional: back button on forum screen can call this
+function hideForum(){
+  $("forumScreen")?.classList.add("hidden");
+  showHome();
+}
+
+async function connectForum(){
   try{
     await initFirebase();
 
@@ -714,47 +695,40 @@ async function joinRoom(roomId){
       collection, query, orderBy, limit, onSnapshot
     } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
-    if(unsubMessages){ unsubMessages(); unsubMessages = null; }
+    if(unsubForum){ unsubForum(); unsubForum = null; }
 
-    activeRoomId = rid;
-    setRoomInURL(rid);
+    // Ensure forum doc exists
+    await setDoc(doc(db, "forums", FORUM_ID), { createdAtMs: Date.now() }, { merge: true });
 
-    // Create room doc (safe)
-    await setDoc(doc(db, "rooms", rid), { createdAtMs: Date.now() }, { merge: true });
+    setForumStatus("Live ✅");
+    setForumUIEnabled(true);
 
-    setChatStatus("Live ✅");
-    setRoomMeta(`Room: ${rid} • Share link to invite friends`);
-    setChatUIEnabled(true);
-
-    // ✅ Reliable ordering
     const q = query(
-      collection(db, "rooms", rid, "messages"),
+      collection(db, "forums", FORUM_ID, "messages"),
       orderBy("createdAtMs", "desc"),
-      limit(80)
+      limit(120)
     );
 
-    unsubMessages = onSnapshot(q, (snap) => {
+    unsubForum = onSnapshot(q, (snap) => {
       const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
-      renderChatMessages(docs);
+      renderForumMessages(docs);
     }, (err) => {
-      console.error("Listener error:", err);
-      alert("Listener failed: " + err.message);
-      setChatStatus("Offline");
-      setChatUIEnabled(false);
+      console.error("Forum listener error:", err);
+      alert("Forum listener failed: " + err.message);
+      setForumStatus("Offline");
+      setForumUIEnabled(false);
     });
 
   }catch(err){
-    console.error("JOIN FAILED:", err);
-    alert("Join failed: " + err.message);
-    setChatStatus("Offline");
-    setChatUIEnabled(false);
+    console.error("CONNECT FORUM FAILED:", err);
+    setForumStatus("Offline");
+    setForumUIEnabled(false);
+    throw err;
   }
 }
 
-async function sendChatMessage(){
-  if(!activeRoomId) return;
-
-  const input = $("chatInput");
+async function sendForumMessage(){
+  const input = $("forumInput");
   const text = (input?.value || "").trim();
   if(!text) return;
 
@@ -765,60 +739,39 @@ async function sendChatMessage(){
 
   try{
     await initFirebase();
-
     const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
-    await addDoc(collection(db, "rooms", activeRoomId, "messages"), {
+    await addDoc(collection(db, "forums", FORUM_ID, "messages"), {
       name,
       text: text.slice(0, 220),
       createdAtMs: Date.now()
     });
 
   }catch(err){
-    console.error("SEND FAILED:", err);
+    console.error("FORUM SEND FAILED:", err);
     alert("Send failed: " + err.message);
-    setChatStatus("Send failed");
-    setTimeout(() => setChatStatus("Live ✅"), 1200);
+    setForumStatus("Send failed");
+    setTimeout(() => setForumStatus("Live ✅"), 1200);
   }
 }
 
-async function copyRoomLink(){
-  if(!activeRoomId) return;
-  const link = makeShareLink(activeRoomId);
+function bindForumUI(){
+  // ✅ Sidebar button near theme toggle (you must create this element in HTML)
+  // Example HTML id: <button id="forumNavBtn">Public Discussion Forum</button>
+  $("forumNavBtn")?.addEventListener("click", showForum);
 
-  try{
-    await navigator.clipboard.writeText(link);
-    setChatStatus("Link copied ✅");
-    setTimeout(() => setChatStatus("Live ✅"), 1200);
-  }catch{
-    prompt("Copy this link:", link);
-  }
-}
+  // ✅ Forum back button (optional)
+  $("forumBackBtn")?.addEventListener("click", hideForum);
 
-function bindChatUI(){
-  $("createRoomBtn")?.addEventListener("click", () => joinRoom(randomRoomId()));
-  $("joinRoomBtn")?.addEventListener("click", () => {
-    const code = ($("joinRoomInput")?.value || "").trim();
-    if(!code) return alert("Enter a room code.");
-    joinRoom(code);
+  // ✅ send
+  $("forumSendBtn")?.addEventListener("click", sendForumMessage);
+  $("forumInput")?.addEventListener("keydown", (e) => {
+    if(e.key === "Enter") sendForumMessage();
   });
-  $("copyRoomLinkBtn")?.addEventListener("click", copyRoomLink);
 
-  $("chatSendBtn")?.addEventListener("click", sendChatMessage);
-  $("chatInput")?.addEventListener("keydown", (e) => {
-    if(e.key === "Enter") sendChatMessage();
-  });
-}
-
-async function initRoomFromURL(){
-  const roomId = getRoomFromURL();
-  if(roomId){
-    await joinRoom(roomId);
-  }else{
-    setChatStatus("Offline");
-    setRoomMeta("No room • Create or join");
-    setChatUIEnabled(false);
-  }
+  // default UI state
+  setForumStatus("Offline");
+  setForumUIEnabled(false);
 }
 
 // ----------------------------
@@ -882,7 +835,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   bindTodo();
   renderTodos();
 
-  // ✅ Rooms
-  bindChatUI();
-  await initRoomFromURL();
+  // ✅ Public Discussion Forum
+  bindForumUI();
 });
+
