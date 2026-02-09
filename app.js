@@ -1,6 +1,8 @@
 // ============================
 // CA Foundation Tracker + Shareable Study Rooms (FULL)
-// (Updated: chat uses createdAtMs for reliable ordering)
+// FIXED: Share links always point to GitHub Pages (PUBLIC_BASE_URL)
+// FIXED: Join/Create shows errors (no silent failure)
+// FIXED: Chat ordering uses createdAtMs (reliable)
 // ============================
 
 // ----------------------------
@@ -136,7 +138,6 @@ function bindUserCapture(){
     closeUserCapture();
   });
 }
-
 function initUserCapture(){
   bindUserCapture();
   if(!loadUser()) openUserCapture();
@@ -595,10 +596,12 @@ function bindTodo(){
 
 // ============================
 // ✅ SHAREABLE STUDY ROOMS (Firestore)
-// Updated: messages ordered by createdAtMs (no serverTimestamp ordering)
 // ============================
 
-// ✅ Your Firebase config
+// IMPORTANT: GitHub Pages public URL (ALWAYS use this for share links)
+const PUBLIC_BASE_URL = "https://rugvedarao.github.io/StudyLog/";
+
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBtwjeGsQfrT8kBRyA45d1ajwFX0q8qTWk",
   authDomain: "ca-study-rooms.firebaseapp.com",
@@ -621,17 +624,27 @@ function randomRoomId(){
   return out;
 }
 
+function normalizeRoomId(roomId){
+  const r = String(roomId || "").trim().toLowerCase();
+  const cleaned = r.replace(/[^a-z0-9_-]/g, "");
+  return cleaned || null;
+}
+
 function getRoomFromURL(){
   const u = new URL(location.href);
-  return (u.searchParams.get("room") || "").trim() || null;
+  return normalizeRoomId(u.searchParams.get("room"));
 }
+
+// ✅ Always update URL on the PUBLIC site path
 function setRoomInURL(roomId){
-  const u = new URL(location.href);
+  const u = new URL(PUBLIC_BASE_URL);
   u.searchParams.set("room", roomId);
   history.replaceState({}, "", u.toString());
 }
+
+// ✅ Always generate share link on the PUBLIC site path
 function makeShareLink(roomId){
-  const u = new URL(location.href);
+  const u = new URL(PUBLIC_BASE_URL);
   u.searchParams.set("room", roomId);
   return u.toString();
 }
@@ -687,42 +700,55 @@ async function initFirebase(){
 }
 
 async function joinRoom(roomId){
-  roomId = (roomId || "").trim().toLowerCase();
-  if(!roomId) return;
+  const rid = normalizeRoomId(roomId);
+  if(!rid){
+    alert("Invalid room code.");
+    return;
+  }
 
-  await initFirebase();
+  try{
+    await initFirebase();
 
-  const {
-    doc, setDoc,
-    collection, query, orderBy, limit, onSnapshot
-  } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+    const {
+      doc, setDoc,
+      collection, query, orderBy, limit, onSnapshot
+    } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
-  if(unsubMessages){ unsubMessages(); unsubMessages = null; }
+    if(unsubMessages){ unsubMessages(); unsubMessages = null; }
 
-  activeRoomId = roomId;
-  setRoomInURL(roomId);
+    activeRoomId = rid;
+    setRoomInURL(rid);
 
-  setChatStatus("Live ✅");
-  setRoomMeta(`Room: ${roomId} • Share link to invite friends`);
-  setChatUIEnabled(true);
+    // Create room doc (safe)
+    await setDoc(doc(db, "rooms", rid), { createdAtMs: Date.now() }, { merge: true });
 
-  // create room doc (safe)
-  await setDoc(doc(db, "rooms", roomId), { createdAtMs: Date.now() }, { merge: true });
+    setChatStatus("Live ✅");
+    setRoomMeta(`Room: ${rid} • Share link to invite friends`);
+    setChatUIEnabled(true);
 
-  // ✅ order by createdAtMs (works reliably)
-  const q = query(
-    collection(db, "rooms", roomId, "messages"),
-    orderBy("createdAtMs", "desc"),
-    limit(80)
-  );
+    // ✅ Reliable ordering
+    const q = query(
+      collection(db, "rooms", rid, "messages"),
+      orderBy("createdAtMs", "desc"),
+      limit(80)
+    );
 
-  unsubMessages = onSnapshot(q, (snap) => {
-    const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
-    renderChatMessages(docs);
-  }, (err) => {
-    console.warn("Chat listener error:", err);
+    unsubMessages = onSnapshot(q, (snap) => {
+      const docs = snap.docs.slice().reverse().map(d => ({ id: d.id, ...d.data() }));
+      renderChatMessages(docs);
+    }, (err) => {
+      console.error("Listener error:", err);
+      alert("Listener failed: " + err.message);
+      setChatStatus("Offline");
+      setChatUIEnabled(false);
+    });
+
+  }catch(err){
+    console.error("JOIN FAILED:", err);
+    alert("Join failed: " + err.message);
     setChatStatus("Offline");
-  });
+    setChatUIEnabled(false);
+  }
 }
 
 async function sendChatMessage(){
@@ -737,18 +763,20 @@ async function sendChatMessage(){
 
   input.value = "";
 
-  await initFirebase();
-
-  const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
-
   try{
+    await initFirebase();
+
+    const { collection, addDoc } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
     await addDoc(collection(db, "rooms", activeRoomId, "messages"), {
       name,
       text: text.slice(0, 220),
-      createdAtMs: Date.now() // ✅ reliable
+      createdAtMs: Date.now()
     });
+
   }catch(err){
-    console.warn("Send failed:", err);
+    console.error("SEND FAILED:", err);
+    alert("Send failed: " + err.message);
     setChatStatus("Send failed");
     setTimeout(() => setChatStatus("Live ✅"), 1200);
   }
