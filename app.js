@@ -838,4 +838,3 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ✅ Public Discussion Forum
   bindForumUI();
 });
-
