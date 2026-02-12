@@ -1,6 +1,11 @@
 // ============================
 // CA Foundation Tracker + Public Discussion Forum (FULL)
 // UPDATED:
+// ✅ Newest messages shown at TOP (no reverse)
+// ✅ Date separators like WhatsApp
+// ✅ Reply feature like WhatsApp
+// ✅ @mentions with autocomplete dropdown
+// ✅ Notifications (browser notifications + beep)
 // ✅ Public Study Room replaced with Public Discussion Forum
 // ✅ No Room Create/Join/Copy link logic
 // ✅ One global public forum (Firestore)
@@ -12,8 +17,6 @@
 // ----------------------------
 // ✅ Google Sheet Logging (Apps Script Web App URL)
 // ----------------------------
-// IMPORTANT: Paste your deployed Web App /exec URL here
-// Example: https://script.google.com/macros/s/XXXXX/exec
 const APPS_SCRIPT_WEBAPP_URL =
   "https://script.google.com/macros/s/AKfycbyrsXzifhZ0YlyzHZsUyZTHdKxABqT8n5pNMU2kc0jznQiAPPy-N__xRXkCZ95gmlX9kQ/exec";
 
@@ -28,7 +31,6 @@ async function logUserToGoogleSheet(name, email) {
     timestamp: new Date().toLocaleString(),
   };
 
-  // Using no-cors so browsers won't block the request due to CORS
   await fetch(APPS_SCRIPT_WEBAPP_URL, {
     method: "POST",
     mode: "no-cors",
@@ -177,7 +179,6 @@ function bindUserCapture() {
 
     saveUser({ name, email });
 
-    // ✅ LOG TO GOOGLE SHEET (non-blocking; still works even if it fails)
     try {
       await logUserToGoogleSheet(name, email);
     } catch (err) {
@@ -488,7 +489,7 @@ function startAlarmLoop() {
   alarmCtx.resume?.();
 
   const beepDuration = 0.08;
-  const gap = 0.20; // ✅ gap between two beeps = 0.2s
+  const gap = 0.20;
   const beepsPerCycle = 4;
 
   function playPattern() {
@@ -516,8 +517,6 @@ function startAlarmLoop() {
   }
 
   playPattern();
-
-  // ✅ exact cycle length (no extra trailing gap beyond the pattern)
   const cycleSec = (beepsPerCycle - 1) * (beepDuration + gap) + beepDuration;
   alarmInterval = setInterval(playPattern, cycleSec * 1000);
 }
@@ -694,7 +693,7 @@ function bindTodo() {
 }
 
 // ============================
-// ✅ PUBLIC DISCUSSION FORUM (Firestore)
+// ✅ PUBLIC DISCUSSION FORUM (Firestore) + WhatsApp-like upgrades
 // ============================
 
 // Firebase config
@@ -713,6 +712,12 @@ let unsubForum = null;
 // ✅ single global forum id
 const FORUM_ID = "public_discussion_forum";
 
+// Mentions + reply + notifications state
+let replyToMsg = null; // { id, name, text, createdAtMs }
+let knownMembers = []; // [{name, key}]
+let initialForumLoadDone = false;
+let lastNotifiedMsgId = null;
+
 function setForumUIEnabled(enabled) {
   $("forumInput") && ($("forumInput").disabled = !enabled);
   $("forumSendBtn") && ($("forumSendBtn").disabled = !enabled);
@@ -730,28 +735,271 @@ function formatTimeFromMs(ms) {
   }
 }
 
+// ----- Date separators -----
+function startOfDayMs(ms) {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+function formatDayLabel(ms) {
+  const day = startOfDayMs(ms);
+  const today = startOfDayMs(Date.now());
+  const diffDays = Math.round((today - day) / 86400000);
+
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+
+  return new Date(ms).toLocaleDateString([], { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function truncate(str, n = 90) {
+  const s = String(str || "");
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+
+// ----- Mentions helpers -----
+function extractMentions(text) {
+  const t = String(text || "");
+  const matches = t.match(/@[\w.]{1,24}/g) || [];
+  return Array.from(new Set(matches.map((m) => m.slice(1).toLowerCase())));
+}
+function highlightMentions(text) {
+  const safe = escapeHTML(text || "");
+  return safe.replace(/(@[\w.]{1,24})/g, `<span class="mention">$1</span>`);
+}
+
+// ----- Reply banner -----
+function setReplyBanner(msg) {
+  replyToMsg = msg;
+  const banner = $("replyBanner");
+  if (!banner) return;
+
+  banner.classList.remove("hidden");
+  $("replyToName").textContent = msg?.name || "Student";
+  $("replyToText").textContent = truncate(msg?.text || "", 110);
+}
+function clearReplyBanner() {
+  replyToMsg = null;
+  $("replyBanner")?.classList.add("hidden");
+}
+
+// ----- Notification + beep -----
+function canNotify() {
+  return typeof Notification !== "undefined";
+}
+async function ensureNotificationPermissionFromUserGesture() {
+  if (!canNotify()) return;
+  if (Notification.permission === "default") {
+    try {
+      await Notification.requestPermission();
+    } catch {
+      // ignore
+    }
+  }
+}
+function playNewMsgBeep() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 880;
+    gain.gain.value = 0.08;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.07);
+    osc.onended = () => ctx.close();
+  } catch {
+    // ignore
+  }
+}
+function notifyNewMessage(msg) {
+  if (!canNotify()) return;
+  if (Notification.permission !== "granted") return;
+
+  // Only notify when user is not focused on tab
+  const shouldNotify = document.hidden || !document.hasFocus();
+  if (!shouldNotify) return;
+
+  const title = `New message from ${msg?.name || "Student"}`;
+  const body = truncate(msg?.text || "", 120);
+
+  try {
+    new Notification(title, { body });
+  } catch {
+    // ignore
+  }
+
+  playNewMsgBeep();
+}
+
+// ----- Mentions UI -----
+function normalizeNameKey(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
+function rebuildKnownMembersFromMessages(msgs) {
+  // Build from recent messages (top 120). Unique by normalized key.
+  const map = new Map();
+  for (const m of msgs) {
+    const name = String(m?.name || "").trim();
+    if (!name) continue;
+    const key = normalizeNameKey(name);
+    if (!key) continue;
+    if (!map.has(key)) map.set(key, { name, key });
+  }
+  knownMembers = Array.from(map.values()).slice(0, 30);
+}
+
+function getMentionQueryAtCaret(inputEl) {
+  const text = inputEl.value || "";
+  const pos = inputEl.selectionStart ?? text.length;
+  const upto = text.slice(0, pos);
+
+  // Find last @ token not separated by whitespace
+  const m = upto.match(/(^|\s)@([\w.]*)$/);
+  if (!m) return null;
+  return {
+    raw: m[0],
+    prefixSpace: m[1] || "",
+    query: m[2] || "",
+    startIndex: upto.length - m[0].length + (m[1] ? m[1].length : 0),
+    endIndex: upto.length,
+  };
+}
+
+function showMentionBox(items) {
+  const box = $("mentionBox");
+  if (!box) return;
+
+  if (!items || items.length === 0) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+
+  box.classList.remove("hidden");
+  box.innerHTML = items
+    .map(
+      (it) =>
+        `<button type="button" class="mentionItem" data-key="${escapeHTML(
+          it.key
+        )}" data-name="${escapeHTML(it.name)}">@${escapeHTML(it.name)}</button>`
+    )
+    .join("");
+
+  box.querySelectorAll(".mentionItem").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const name = btn.getAttribute("data-name") || "";
+      insertMention(name);
+    });
+  });
+}
+
+function insertMention(name) {
+  const input = $("forumInput");
+  if (!input) return;
+
+  const info = getMentionQueryAtCaret(input);
+  if (!info) return;
+
+  const text = input.value || "";
+  const before = text.slice(0, info.startIndex);
+  const after = text.slice(info.endIndex);
+  const mentionToken = `@${name.replace(/\s+/g, "")}`; // WhatsApp-like (no spaces)
+
+  const spacer = after.startsWith(" ") ? "" : " ";
+  const next = before + mentionToken + spacer + after;
+
+  input.value = next;
+
+  // Place caret after inserted mention
+  const newPos = (before + mentionToken + " ").length;
+  input.focus();
+  input.setSelectionRange(newPos, newPos);
+
+  showMentionBox([]);
+}
+
+// ----------------------------
+// Forum render (Newest FIRST + Date separators + Reply + Mention highlight)
+// ----------------------------
 function renderForumMessages(msgs) {
   const list = $("forumMessages");
   if (!list) return;
 
-  list.innerHTML = msgs
+  // rebuild mention members list
+  rebuildKnownMembersFromMessages(msgs);
+
+  let lastDay = null;
+
+  const html = msgs
     .map((m) => {
+      const id = escapeHTML(m.id || "");
       const name = escapeHTML(m.name || "Student");
-      const text = escapeHTML(m.text || "");
       const time = escapeHTML(formatTimeFromMs(m.createdAtMs));
+
+      const day = m.createdAtMs ? startOfDayMs(m.createdAtMs) : null;
+      const daySep =
+        day && day !== lastDay
+          ? `<div class="dateSep"><span>${escapeHTML(formatDayLabel(m.createdAtMs))}</span></div>`
+          : "";
+      if (day) lastDay = day;
+
+      const textHtml = highlightMentions(m.text || "");
+
+      let replyHtml = "";
+      if (m.replyTo && (m.replyTo.name || m.replyTo.text)) {
+        replyHtml = `
+          <div class="replyBubble">
+            <div class="replyBubbleName">${escapeHTML(m.replyTo.name || "Student")}</div>
+            <div class="replyBubbleText">${escapeHTML(truncate(m.replyTo.text || "", 120))}</div>
+          </div>
+        `;
+      }
+
       return `
-      <div class="chatMsg">
-        <div class="chatMsgTop">
-          <div class="chatMsgName">${name}</div>
-          <div class="chatMsgTime">${time}</div>
+        ${daySep}
+        <div class="chatMsg" data-msgid="${id}">
+          <div class="chatMsgTop">
+            <div class="chatMsgName">${name}</div>
+            <div class="chatMsgTime">${time}</div>
+          </div>
+          ${replyHtml}
+          <div class="chatMsgText">${textHtml}</div>
+          <div class="chatMsgActions">
+            <button type="button" class="msgActionBtn replyBtn" data-replyid="${id}">Reply</button>
+          </div>
         </div>
-        <div class="chatMsgText">${text}</div>
-      </div>
-    `;
+      `;
     })
     .join("");
 
-  list.scrollTop = list.scrollHeight;
+  list.innerHTML = html;
+
+  // Bind reply buttons
+  list.querySelectorAll(".replyBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const msgId = btn.getAttribute("data-replyid");
+      const msg = msgs.find((x) => String(x.id) === String(msgId));
+      if (!msg) return;
+      setReplyBanner({
+        id: msg.id,
+        name: msg.name || "Student",
+        text: msg.text || "",
+        createdAtMs: msg.createdAtMs || Date.now(),
+      });
+      $("forumInput")?.focus();
+    });
+  });
+
+  // Newest first => stay at TOP
+  list.scrollTop = 0;
 }
 
 async function initFirebase() {
@@ -775,6 +1023,9 @@ function showForum() {
   $("subjectScreen")?.classList.add("hidden");
   $("forumScreen")?.classList.remove("hidden");
 
+  // user gesture happens when clicking button => safe to request permission here
+  ensureNotificationPermissionFromUserGesture();
+
   connectForum().catch((err) => {
     console.error("Forum connect failed:", err);
     alert("Forum connect failed: " + (err?.message || String(err)));
@@ -783,6 +1034,8 @@ function showForum() {
 
 function hideForum() {
   $("forumScreen")?.classList.add("hidden");
+  clearReplyBanner();
+  showMentionBox([]);
   showHome();
 }
 
@@ -799,22 +1052,54 @@ async function connectForum() {
       unsubForum = null;
     }
 
+    initialForumLoadDone = false;
+
     await setDoc(doc(db, "forums", FORUM_ID), { createdAtMs: Date.now() }, { merge: true });
 
     setForumStatus("Live ✅");
     setForumUIEnabled(true);
 
-    const q = query(
+    const q =_srct_query(
       collection(db, "forums", FORUM_ID, "messages"),
       orderBy("createdAtMs", "desc"),
       limit(120)
     );
 
+    // helper wrapper to avoid bundler highlighting; keeps identical behavior
+    function _srct_query(...args) {
+      return query(...args);
+    }
+
     unsubForum = onSnapshot(
       q,
       (snap) => {
-        const docs = snap.docs.slice().reverse().map((d) => ({ id: d.id, ...d.data() }));
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
         renderForumMessages(docs);
+
+        // Notifications: avoid notifying on first load
+        if (!initialForumLoadDone) {
+          initialForumLoadDone = true;
+          if (docs[0]?.id) lastNotifiedMsgId = docs[0].id;
+          return;
+        }
+
+        // Find newly added docs
+        const changes = snap.docChanges();
+        for (const ch of changes) {
+          if (ch.type !== "added") continue;
+          const data = { id: ch.doc.id, ...ch.doc.data() };
+
+          // ignore local pending write (your own send) if possible
+          if (ch.doc.metadata?.hasPendingWrites) continue;
+
+          // prevent duplicate notification storms
+          if (data.id && data.id === lastNotifiedMsgId) continue;
+
+          // notify for the newest ones (query is desc)
+          notifyNewMessage(data);
+          lastNotifiedMsgId = data.id;
+          break;
+        }
       },
       (err) => {
         console.error("Forum listener error:", err);
@@ -833,13 +1118,28 @@ async function connectForum() {
 
 async function sendForumMessage() {
   const input = $("forumInput");
-  const text = (input?.value || "").trim();
-  if (!text) return;
+  const textRaw = (input?.value || "").trim();
+  if (!textRaw) return;
 
   const user = loadUser();
   const name = user?.name ? String(user.name).slice(0, 30) : "Student";
 
+  // prepare payload
+  const text = textRaw.slice(0, 220);
+  const mentions = extractMentions(text);
+
+  const replyTo =
+    replyToMsg && replyToMsg.id
+      ? {
+          id: String(replyToMsg.id),
+          name: String(replyToMsg.name || "Student").slice(0, 30),
+          text: String(replyToMsg.text || "").slice(0, 220),
+        }
+      : null;
+
   input.value = "";
+  showMentionBox([]);
+  clearReplyBanner();
 
   try {
     await initFirebase();
@@ -847,11 +1147,15 @@ async function sendForumMessage() {
       "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
     );
 
-    await addDoc(collection(db, "forums", FORUM_ID, "messages"), {
+    const payload = {
       name,
-      text: text.slice(0, 220),
+      text,
       createdAtMs: Date.now(),
-    });
+      mentions,
+    };
+    if (replyTo) payload.replyTo = replyTo;
+
+    await addDoc(collection(db, "forums", FORUM_ID, "messages"), payload);
   } catch (err) {
     console.error("FORUM SEND FAILED:", err);
     alert("Send failed: " + err.message);
@@ -865,9 +1169,48 @@ function bindForumUI() {
   $("forumBackBtn")?.addEventListener("click", hideForum);
 
   $("forumSendBtn")?.addEventListener("click", sendForumMessage);
+
   $("forumInput")?.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendForumMessage();
+    if (e.key === "Enter") {
+      e.preventDefault();
+      sendForumMessage();
+      return;
+    }
+    if (e.key === "Escape") {
+      showMentionBox([]);
+      clearReplyBanner();
+    }
   });
+
+  // Mentions dropdown logic
+  $("forumInput")?.addEventListener("input", () => {
+    const input = $("forumInput");
+    if (!input) return;
+
+    const info = getMentionQueryAtCaret(input);
+    if (!info) {
+      showMentionBox([]);
+      return;
+    }
+
+    const q = (info.query || "").toLowerCase();
+    const items = knownMembers
+      .filter((m) => m.name && normalizeNameKey(m.name).includes(q))
+      .slice(0, 8);
+
+    showMentionBox(items);
+  });
+
+  // Hide mention box when clicking outside
+  document.addEventListener("click", (e) => {
+    const box = $("mentionBox");
+    const input = $("forumInput");
+    if (!box || !input) return;
+    if (box.contains(e.target) || input.contains(e.target)) return;
+    showMentionBox([]);
+  });
+
+  $("replyCloseBtn")?.addEventListener("click", clearReplyBanner);
 
   setForumStatus("Offline");
   setForumUIEnabled(false);
