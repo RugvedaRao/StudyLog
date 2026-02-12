@@ -1,13 +1,9 @@
 /* ============================
-   CA Foundation Tracker (v2+)
-   CSS updated to match:
-   - index.html structure
-   - app.js features:
-     ✅ Public Discussion Forum UI
-     ✅ Reply banner + reply bubble
-     ✅ @mentions highlight + autocomplete dropdown
-     ✅ WhatsApp-like date separators
-     ✅ Forum input on top, messages below
+   CA Foundation Tracker (Updated)
+   - Professional Forum UI
+   - Reply as text (↩ Reply)
+   - Reply quote block (clean)
+   - Mentions dropdown + highlights
    ============================ */
 
 :root{
@@ -32,6 +28,8 @@
   --linkHover: rgba(56,189,248,.18);
 
   --danger:#ff6b6b;
+  --glass: rgba(0,0,0,.22);
+  --glass2: rgba(255,255,255,.06);
 }
 
 body[data-theme="light"]{
@@ -51,6 +49,9 @@ body[data-theme="light"]{
 
   --linkBg: rgba(56,189,248,.14);
   --linkHover: rgba(56,189,248,.22);
+
+  --glass: rgba(255,255,255,.80);
+  --glass2: rgba(0,0,0,.04);
 }
 
 *{ box-sizing:border-box; }
@@ -194,7 +195,6 @@ body[data-theme="light"] .quoteText{
   margin-left:auto;
 }
 
-/* Buttons (base) */
 button{
   border:none;
   border-radius: 10px;
@@ -220,10 +220,8 @@ button:disabled{
   cursor:not-allowed;
 }
 
-/* Small button helper (Forum button uses this) */
 .smallBtn{ padding:10px 12px; font-size:13px; border-radius:12px; }
 
-/* Theme toggle pill */
 .themeToggle{
   display:inline-flex;
   align-items:center;
@@ -301,7 +299,7 @@ body[data-theme="light"] .ring{ background: rgba(255,255,255,.70); }
 body[data-theme="light"] .overallBelow{ color: rgba(0,0,0,.75); }
 .overallBelow span{ color: var(--muted); font-weight:800; font-size:13px; }
 
-/* Home extras (todo + links) */
+/* Home extras */
 .extrasGrid{
   margin-top:18px;
   display:grid;
@@ -470,208 +468,16 @@ body[data-theme="light"] .subjectMini{ color: rgba(0,0,0,.65); }
 }
 .actionsSpacer{ flex:1 1 auto; }
 
-/* Hidden helper */
+/* Hidden */
 .hidden{ display:none !important; }
 
 /* ============================
-   Forum / Chat styles (NEW)
+   FORUM / CHAT (Professional)
    ============================ */
 
-/* Wrap around input + mentions */
-.chatInputWrap{
-  position:relative;
-}
+.chatInputWrap{ position:relative; }
 
-/* Forum status (Offline / Live) */
-#forumStatus{
-  margin-top:10px;
-  text-align:center;
-  font-weight:900;
-  font-size:12px;
-  color: var(--muted);
-  opacity:.95;
-}
-
-/* Chat messages list */
-.chatMessages{
-  height: min(520px, 62vh);
-  overflow-y:auto;
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  padding-right:4px;
-  border-top: 1px solid rgba(255,255,255,.08);
-  padding-top:10px;
-}
-body[data-theme="light"] .chatMessages{ border-top: 1px solid rgba(0,0,0,.08); }
-
-/* Single message bubble */
-.chatMsg{
-  background: rgba(255,255,255,.05);
-  border-radius:12px;
-  padding:8px 10px;
-  border: 1px solid rgba(255,255,255,.06);
-}
-body[data-theme="light"] .chatMsg{
-  background: rgba(0,0,0,.04);
-  border: 1px solid rgba(0,0,0,.06);
-}
-
-.chatMsgTop{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:10px;
-  margin-bottom:4px;
-}
-.chatMsgName{ font-weight:1000; font-size:12px; color: var(--text); }
-.chatMsgTime{ font-weight:800; font-size:11px; color: var(--muted); white-space:nowrap; }
-
-.chatMsgText{
-  font-weight:800;
-  font-size:13px;
-  color: var(--text);
-  line-height:1.35;
-  word-wrap:break-word;
-}
-
-/* Actions row (Reply button) */
-.chatMsgActions{
-  margin-top:8px;
-  display:flex;
-  justify-content:flex-end;
-}
-.msgActionBtn{
-  font-size:12px;
-  padding:8px 10px;
-  border-radius:10px;
-  background: rgba(0,0,0,.20);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(255,255,255,.90);
-}
-body[data-theme="light"] .msgActionBtn{
-  background: rgba(255,255,255,.80);
-  border: 1px solid rgba(0,0,0,.12);
-  color: rgba(0,0,0,.78);
-}
-.msgActionBtn:hover{
-  transform: translateY(-1px);
-  background: rgba(255,255,255,.08);
-}
-body[data-theme="light"] .msgActionBtn:hover{
-  background: rgba(0,0,0,.04);
-}
-
-/* Reply bubble inside message */
-.replyBubble{
-  margin:6px 0 6px;
-  padding:8px 10px;
-  border-radius:12px;
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.10);
-}
-body[data-theme="light"] .replyBubble{
-  background: rgba(0,0,0,.04);
-  border: 1px solid rgba(0,0,0,.10);
-}
-.replyBubbleName{
-  font-weight:1000;
-  font-size:12px;
-  color: rgba(255,255,255,.92);
-}
-body[data-theme="light"] .replyBubbleName{
-  color: rgba(0,0,0,.82);
-}
-.replyBubbleText{
-  margin-top:2px;
-  font-weight:800;
-  font-size:12px;
-  color: var(--muted);
-  line-height:1.25;
-}
-
-/* Date separator like WhatsApp */
-.dateSep{
-  display:flex;
-  justify-content:center;
-  margin:6px 0;
-}
-.dateSep span{
-  font-weight:1000;
-  font-size:11px;
-  letter-spacing:.3px;
-  text-transform:uppercase;
-  padding:6px 10px;
-  border-radius:999px;
-  color: rgba(255,255,255,.88);
-  background: rgba(0,0,0,.22);
-  border: 1px solid rgba(255,255,255,.14);
-}
-body[data-theme="light"] .dateSep span{
-  color: rgba(0,0,0,.70);
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(0,0,0,.12);
-}
-
-/* Mention highlight in messages */
-.mention{
-  display:inline-block;
-  padding:1px 6px;
-  border-radius:999px;
-  font-weight:1000;
-  background: rgba(56,189,248,.14);
-  border: 1px solid rgba(56,189,248,.25);
-  color: var(--accent);
-}
-
-/* Forum input row */
-.chatInputRow{
-  display:flex;
-  gap:10px;
-  margin-top:0;
-}
-.chatInputRow input{
-  flex:1;
-  padding:10px 12px;
-  border-radius:12px;
-  border: 1px solid var(--softBorder);
-  background: var(--chipBg);
-  color: var(--text);
-  font-weight:800;
-  outline:none;
-}
-.chatInputRow input::placeholder{
-  color: rgba(168,183,216,.75);
-  font-weight:800;
-}
-body[data-theme="light"] .chatInputRow input::placeholder{
-  color: rgba(70,83,107,.65);
-}
-.chatInputRow button{
-  border:none;
-  border-radius:12px;
-  padding:10px 14px;
-  font-weight:900;
-  cursor:pointer;
-  background: linear-gradient(90deg, var(--green), var(--accent));
-  color:#061223;
-}
-
-/* Forum layout: input on top, messages below */
-#forumScreen .chatInputRow{
-  margin-top: 0;
-}
-#forumScreen .chatMessages{
-  border-top: 1px solid rgba(255,255,255,.08);
-  margin-top: 12px;
-  padding-top: 12px;
-  height: min(520px, 62vh);
-}
-body[data-theme="light"] #forumScreen .chatMessages{
-  border-top: 1px solid rgba(0,0,0,.08);
-}
-
-/* Reply banner (top of forum screen) */
+/* Reply banner */
 .replyBanner{
   margin:10px 0 10px;
   padding:10px 12px;
@@ -680,11 +486,10 @@ body[data-theme="light"] #forumScreen .chatMessages{
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  background: rgba(0,0,0,.22);
+  background: var(--glass);
   border: 1px solid rgba(255,255,255,.14);
 }
 body[data-theme="light"] .replyBanner{
-  background: rgba(255,255,255,.80);
   border: 1px solid rgba(0,0,0,.12);
 }
 .replyBannerLeft{
@@ -698,9 +503,7 @@ body[data-theme="light"] .replyBanner{
   font-size:12px;
   color: rgba(255,255,255,.92);
 }
-body[data-theme="light"] .replyLabel{
-  color: rgba(0,0,0,.78);
-}
+body[data-theme="light"] .replyLabel{ color: rgba(0,0,0,.78); }
 .replyPreview{
   font-weight:800;
   font-size:12px;
@@ -708,7 +511,7 @@ body[data-theme="light"] .replyLabel{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  max-width: 700px;
+  max-width: 760px;
 }
 .replyClose{
   border:none;
@@ -760,11 +563,223 @@ body[data-theme="light"] .mentionItem{
   border-bottom: 1px solid rgba(0,0,0,.08);
   color: rgba(0,0,0,.78);
 }
-.mentionItem:hover{
-  background: rgba(56,189,248,.18);
+.mentionItem:hover{ background: rgba(56,189,248,.18); }
+.mentionBox .mentionItem:last-child{ border-bottom:none; }
+
+/* Forum input row */
+.chatInputRow{
+  display:flex;
+  gap:10px;
+  margin-top:0;
 }
-.mentionBox .mentionItem:last-child{
-  border-bottom:none;
+.chatInputRow input{
+  flex:1;
+  padding:10px 12px;
+  border-radius:12px;
+  border: 1px solid var(--softBorder);
+  background: var(--chipBg);
+  color: var(--text);
+  font-weight:800;
+  outline:none;
+}
+.chatInputRow input::placeholder{
+  color: rgba(168,183,216,.75);
+  font-weight:800;
+}
+body[data-theme="light"] .chatInputRow input::placeholder{
+  color: rgba(70,83,107,.65);
+}
+.chatInputRow button{
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  font-weight:900;
+  cursor:pointer;
+  background: linear-gradient(90deg, var(--green), var(--accent));
+  color:#061223;
+}
+
+/* Messages list */
+.chatMessages{
+  height: min(520px, 62vh);
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  padding-right:6px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding-top:12px;
+}
+body[data-theme="light"] .chatMessages{
+  border-top: 1px solid rgba(0,0,0,.08);
+}
+
+/* Date separator */
+.dateSep{
+  display:flex;
+  justify-content:center;
+  margin:4px 0 2px;
+}
+.dateSep span{
+  font-weight:1000;
+  font-size:11px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  padding:6px 10px;
+  border-radius:999px;
+  color: rgba(255,255,255,.88);
+  background: rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.14);
+}
+body[data-theme="light"] .dateSep span{
+  color: rgba(0,0,0,.70);
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.12);
+}
+
+/* Message bubble */
+.chatMsg{
+  background: rgba(255,255,255,.05);
+  border-radius:14px;
+  padding:10px 12px;
+  border: 1px solid rgba(255,255,255,.06);
+}
+body[data-theme="light"] .chatMsg{
+  background: rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+/* Reply messages get a subtle left accent line */
+.chatMsg.isReply{
+  position:relative;
+}
+.chatMsg.isReply:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:10px;
+  bottom:10px;
+  width:3px;
+  border-radius: 999px;
+  background: rgba(56,189,248,.85);
+  opacity:.7;
+}
+
+/* Header row inside message */
+.chatMsgTop{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:6px;
+}
+.chatMsgName{ font-weight:1000; font-size:12px; color: var(--text); }
+.chatMsgTime{ font-weight:800; font-size:11px; color: var(--muted); white-space:nowrap; }
+
+/* Reply quote block */
+.replyQuote{
+  margin:6px 0 8px;
+  padding:8px 10px;
+  border-radius:12px;
+  background: rgba(0,0,0,.20);
+  border: 1px solid rgba(255,255,255,.10);
+  position:relative;
+  overflow:hidden;
+}
+body[data-theme="light"] .replyQuote{
+  background: rgba(0,0,0,.03);
+  border: 1px solid rgba(0,0,0,.10);
+}
+.replyQuote:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:8px;
+  bottom:8px;
+  width:3px;
+  border-radius: 999px;
+  background: rgba(34,197,94,.85);
+  opacity:.75;
+}
+.replyQuoteName{
+  font-weight:1000;
+  font-size:12px;
+  color: rgba(255,255,255,.92);
+  padding-left:8px;
+}
+body[data-theme="light"] .replyQuoteName{ color: rgba(0,0,0,.82); }
+.replyQuoteText{
+  margin-top:2px;
+  font-weight:800;
+  font-size:12px;
+  color: var(--muted);
+  line-height:1.25;
+  padding-left:8px;
+}
+
+/* Main message text */
+.chatMsgText{
+  font-weight:800;
+  font-size:13px;
+  color: var(--text);
+  line-height:1.45;
+  word-wrap:break-word;
+}
+
+/* Reply action - make it clean (no box) */
+.chatMsgActions{
+  margin-top:8px;
+  display:flex;
+  justify-content:flex-end;
+}
+.msgActionBtn{
+  border:none;
+  background: transparent;
+  padding:0;
+  cursor:pointer;
+  font-weight:900;
+  font-size:12px;
+  color: rgba(255,255,255,.88);
+  opacity:.9;
+}
+body[data-theme="light"] .msgActionBtn{
+  color: rgba(0,0,0,.70);
+}
+.msgActionBtn:hover{
+  opacity:1;
+  text-decoration: underline;
+}
+
+/* Mention highlight in messages */
+.mention{
+  display:inline-block;
+  padding:1px 6px;
+  border-radius:999px;
+  font-weight:1000;
+  background: rgba(56,189,248,.14);
+  border: 1px solid rgba(56,189,248,.25);
+  color: var(--accent);
+}
+
+/* Forum status */
+#forumStatus{
+  margin-top:10px;
+  text-align:center;
+  font-weight:900;
+  font-size:12px;
+  color: var(--muted);
+  opacity:.95;
+}
+
+/* Forum layout: input on top, messages below */
+#forumScreen .chatInputRow{ margin-top:0; }
+#forumScreen .chatMessages{
+  border-top: 1px solid rgba(255,255,255,.08);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+body[data-theme="light"] #forumScreen .chatMessages{
+  border-top: 1px solid rgba(0,0,0,.08);
 }
 
 /* ============================
@@ -861,9 +876,7 @@ body[data-theme="light"] .timerBtn.secondary{
   color: var(--muted);
 }
 
-/* ============================
-   Alarm overlay
-   ============================ */
+/* Alarm */
 .alarmOverlay{
   position:fixed;
   inset:0;
@@ -889,9 +902,7 @@ body[data-theme="light"] .timerBtn.secondary{
 body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
 .alarmOk{ width:100%; border-radius:14px; padding:12px 16px; }
 
-/* ============================
-   User capture modal
-   ============================ */
+/* User modal */
 .userModal{
   position:fixed;
   inset:0;
@@ -911,7 +922,6 @@ body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
   box-shadow: 0 20px 50px rgba(0,0,0,.55);
   padding:18px;
 }
-.userTop{ display:flex; align-items:center; justify-content:space-between; }
 .userTitle{ font-weight:900; font-size:18px; }
 .userSub{ margin-top:10px; font-weight:800; font-size:13px; color: var(--muted); }
 .userForm{ margin-top:14px; display:flex; flex-direction:column; gap:12px; }
@@ -937,9 +947,7 @@ body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
 .userMsg{ min-height:18px; text-align:center; font-weight:800; font-size:13px; color: var(--muted); }
 .userConsent{ text-align:center; font-weight:800; font-size:12px; color: var(--muted); opacity:.95; }
 
-/* ============================
-   Responsive
-   ============================ */
+/* Responsive */
 @media (max-width: 980px){
   .metersGrid{ grid-template-columns: repeat(2, 1fr); }
   .extrasGrid{ grid-template-columns: repeat(2, 1fr); }
