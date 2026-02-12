@@ -962,3 +962,54 @@ body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
   .titleRowRight{ flex-wrap:wrap; justify-content:flex-end; }
   .replyPreview{ max-width: 260px; }
 }
+/* ============================
+   DESKTOP: make Reply + Reply-messages stand out
+   Paste at END of style.css
+   ============================ */
+@media (min-width: 700px) {
+  /* Make the "↩ Reply" action visible as a pill */
+  .msgActionBtn{
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(56,189,248,.14);
+    border: 1px solid rgba(56,189,248,.28);
+    color: rgba(255,255,255,.92);
+    text-decoration: none;
+  }
+  body[data-theme="light"] .msgActionBtn{
+    background: rgba(56,189,248,.12);
+    border: 1px solid rgba(56,189,248,.28);
+    color: rgba(0,0,0,.75);
+  }
+  .msgActionBtn:hover{
+    background: rgba(56,189,248,.22);
+    text-decoration: none;
+  }
+
+  /* Clearly distinguish messages that are replies */
+  .chatMsg.isReply{
+    background: rgba(56,189,248,.06);
+    border: 1px solid rgba(56,189,248,.18);
+  }
+  body[data-theme="light"] .chatMsg.isReply{
+    background: rgba(56,189,248,.07);
+    border: 1px solid rgba(56,189,248,.22);
+  }
+
+  /* Stronger left accent line for reply messages */
+  .chatMsg.isReply:before{
+    width: 5px;
+    opacity: 1;
+    background: rgba(56,189,248,.95);
+  }
+
+  /* Slightly stronger reply quote block */
+  .replyQuote{
+    background: rgba(0,0,0,.28);
+    border: 1px solid rgba(255,255,255,.14);
+  }
+  body[data-theme="light"] .replyQuote{
+    background: rgba(0,0,0,.05);
+    border: 1px solid rgba(0,0,0,.14);
+  }
+}
