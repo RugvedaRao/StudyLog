@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>CA Foundation Tracker</title>
 
-  <!-- ✅ Correct for GitHub Pages subfolder hosting -->
   <link rel="stylesheet" href="./style.css" />
 </head>
 
@@ -28,7 +27,6 @@
     </header>
 
     <main class="content">
-      <!-- Quote -->
       <div class="quoteCard">
         <div class="quoteText" id="quoteText">Loading quote...</div>
       </div>
@@ -39,7 +37,6 @@
           <div class="titleRow">
             <div class="title">Progress</div>
 
-            <!-- ✅ LEFT of theme toggle: Public Discussion Forum button -->
             <div class="titleRowRight">
               <button class="secondary smallBtn" id="forumNavBtn" type="button" aria-label="Open Public Discussion Forum">
                 Public Discussion Forum
@@ -52,17 +49,13 @@
             </div>
           </div>
 
-          <!-- Progress Rings -->
           <div class="metersGrid" id="metersGrid"></div>
 
-          <!-- Overall -->
           <div class="overallBelow" id="overallBelow">
             Overall: 0% <span>(0/0)</span>
           </div>
 
-          <!-- Extras grid -->
           <div class="extrasGrid">
-            <!-- To-Do -->
             <div class="todoCard" id="todoCard">
               <div class="todoHeader">
                 <div class="todoTitle">To-Do List</div>
@@ -76,7 +69,6 @@
               <div class="todoList" id="todoList"></div>
             </div>
 
-            <!-- Quick Links -->
             <div class="quickLinksCard">
               <div class="quickTitle">Quick Links</div>
 
@@ -94,21 +86,34 @@
         </div>
       </section>
 
-      <!-- ✅ PUBLIC DISCUSSION FORUM SCREEN (Input TOP, messages BELOW) -->
+      <!-- ✅ PUBLIC DISCUSSION FORUM SCREEN -->
       <section id="forumScreen" class="hidden">
         <div class="card">
           <div class="topbar">
             <div class="back" id="forumBackBtn">← Back</div>
           </div>
 
-          <div class="chatInputRow">
-            <input type="text" id="forumInput" placeholder="Type your message…" maxlength="220" disabled />
-            <button id="forumSendBtn" type="button" disabled>Send</button>
+          <!-- ✅ Reply banner -->
+          <div id="replyBanner" class="replyBanner hidden">
+            <div class="replyBannerLeft">
+              <div class="replyLabel">Replying to <span id="replyToName">Student</span></div>
+              <div class="replyPreview" id="replyToText">...</div>
+            </div>
+            <button type="button" class="replyClose" id="replyCloseBtn" aria-label="Close reply">✕</button>
+          </div>
+
+          <div class="chatInputWrap">
+            <div class="chatInputRow">
+              <input type="text" id="forumInput" placeholder="Type your message…" maxlength="220" disabled />
+              <button id="forumSendBtn" type="button" disabled>Send</button>
+            </div>
+
+            <!-- ✅ Mentions dropdown -->
+            <div id="mentionBox" class="mentionBox hidden"></div>
           </div>
 
           <div class="chatMessages" id="forumMessages"></div>
 
-          <!-- hidden status for JS safety -->
           <div id="forumStatus" class="hidden">Offline</div>
         </div>
       </section>
@@ -213,7 +218,6 @@
     </div>
   </div>
 
-  <!-- ✅ Helps you see EXACT errors -->
   <script>
     window.addEventListener("error", (e) => {
       console.error("Script error:", e.message, e.filename, e.lineno);
@@ -223,7 +227,6 @@
     });
   </script>
 
-  <!-- ✅ MUST be module if app.js uses Firebase modular imports -->
-  <script type="module" src="./app.js?v=101"></script>
+  <script type="module" src="./app.js?v=102"></script>
 </body>
 </html>
