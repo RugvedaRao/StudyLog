@@ -1,17 +1,13 @@
 // ============================
-// CA Foundation Tracker + Public Discussion Forum (FULL)
-// UPDATED:
-// ✅ Newest messages shown at TOP (no reverse)
-// ✅ Date separators like WhatsApp
-// ✅ Reply feature like WhatsApp
-// ✅ @mentions with autocomplete dropdown
-// ✅ Notifications (browser notifications + beep)
-// ✅ Public Study Room replaced with Public Discussion Forum
-// ✅ No Room Create/Join/Copy link logic
-// ✅ One global public forum (Firestore)
-// ✅ Forum screen: input on top, messages below
-// ✅ Chat ordering uses createdAtMs (reliable)
-// ✅ Google Sheet logging restored (Apps Script Web App)
+// CA Foundation Tracker + Public Discussion Forum (FULL, updated for new HTML/CSS)
+// - Newest messages TOP
+// - Date separators (WhatsApp-like)
+// - Reply (banner + quote block)
+// - @mentions (autocomplete + highlight)
+// - Notifications (browser + beep)
+// - One global public forum (Firestore)
+// - Forum input on top, messages below
+// - Google Sheet logging (Apps Script Web App)
 // ============================
 
 // ----------------------------
@@ -31,6 +27,7 @@ async function logUserToGoogleSheet(name, email) {
     timestamp: new Date().toLocaleString(),
   };
 
+  // no-cors so it won't block the app even if script doesn't return CORS headers
   await fetch(APPS_SCRIPT_WEBAPP_URL, {
     method: "POST",
     mode: "no-cors",
@@ -128,6 +125,7 @@ const THEME_KEY = "ca_theme_v1";
 const USER_KEY = "ca_user_v1";
 
 const $ = (id) => document.getElementById(id);
+
 function safeParse(x) {
   try {
     return JSON.parse(x);
@@ -397,7 +395,6 @@ function renderHome() {
 
     const card = document.createElement("div");
     card.className = "meterCard";
-
     card.innerHTML = `
       <div class="ring" aria-label="${subj} progress">
         <div class="pct" id="pct_${id}">${pct}%</div>
@@ -433,6 +430,7 @@ function renderSubject() {
   if (!subj) return;
 
   $("subjectTitle") && ($("subjectTitle").textContent = subj);
+  $("subjectMini") && ($("subjectMini").textContent = subj);
 
   const { done, total, pct } = statsFor(state, subj);
   $("subjectRight") && ($("subjectRight").textContent = `${done}/${total} done • ${pct}%`);
@@ -444,7 +442,6 @@ function renderSubject() {
   SUBJECTS[subj].forEach((topic, idx) => {
     const row = document.createElement("div");
     row.className = "topicRow";
-
     row.innerHTML = `
       <div class="topicName">${topic}</div>
       <input type="checkbox" id="cb_${idx}" />
@@ -723,7 +720,10 @@ function setForumUIEnabled(enabled) {
   $("forumSendBtn") && ($("forumSendBtn").disabled = !enabled);
 }
 function setForumStatus(text) {
-  $("forumStatus") && ($("forumStatus").textContent = text);
+  const el = $("forumStatus");
+  if (!el) return;
+  el.textContent = text || "";
+  el.classList.remove("hidden"); // show status when we have any text
 }
 
 function formatTimeFromMs(ms) {
@@ -844,7 +844,6 @@ function normalizeNameKey(name) {
 }
 
 function rebuildKnownMembersFromMessages(msgs) {
-  // Build from recent messages (top 120). Unique by normalized key.
   const map = new Map();
   for (const m of msgs) {
     const name = String(m?.name || "").trim();
@@ -927,13 +926,13 @@ function insertMention(name) {
 }
 
 // ----------------------------
-// Forum render (Newest FIRST + Date separators + Reply + Mention highlight)
+// Forum render (Newest FIRST + Date separators + Reply quote + Mention highlight)
+// (Updated to match your new CSS classes: replyQuote, isReply, etc.)
 // ----------------------------
 function renderForumMessages(msgs) {
   const list = $("forumMessages");
   if (!list) return;
 
-  // rebuild mention members list
   rebuildKnownMembersFromMessages(msgs);
 
   let lastDay = null;
@@ -954,26 +953,31 @@ function renderForumMessages(msgs) {
       const textHtml = highlightMentions(m.text || "");
 
       let replyHtml = "";
+      let isReply = false;
       if (m.replyTo && (m.replyTo.name || m.replyTo.text)) {
+        isReply = true;
         replyHtml = `
-          <div class="replyBubble">
-            <div class="replyBubbleName">${escapeHTML(m.replyTo.name || "Student")}</div>
-            <div class="replyBubbleText">${escapeHTML(truncate(m.replyTo.text || "", 120))}</div>
+          <div class="replyQuote">
+            <div class="replyQuoteName">${escapeHTML(m.replyTo.name || "Student")}</div>
+            <div class="replyQuoteText">${escapeHTML(truncate(m.replyTo.text || "", 120))}</div>
           </div>
         `;
       }
 
       return `
         ${daySep}
-        <div class="chatMsg" data-msgid="${id}">
+        <div class="chatMsg ${isReply ? "isReply" : ""}" data-msgid="${id}">
           <div class="chatMsgTop">
             <div class="chatMsgName">${name}</div>
             <div class="chatMsgTime">${time}</div>
           </div>
+
           ${replyHtml}
+
           <div class="chatMsgText">${textHtml}</div>
+
           <div class="chatMsgActions">
-            <button type="button" class="msgActionBtn replyBtn" data-replyid="${id}">Reply</button>
+            <button type="button" class="msgActionBtn replyBtn" data-replyid="${id}">↩ Reply</button>
           </div>
         </div>
       `;
@@ -998,7 +1002,7 @@ function renderForumMessages(msgs) {
     });
   });
 
-  // Newest first => stay at TOP
+  // Newest first => keep at TOP
   list.scrollTop = 0;
 }
 
@@ -1023,7 +1027,7 @@ function showForum() {
   $("subjectScreen")?.classList.add("hidden");
   $("forumScreen")?.classList.remove("hidden");
 
-  // user gesture happens when clicking button => safe to request permission here
+  // user gesture (button click) => safe to request permission here
   ensureNotificationPermissionFromUserGesture();
 
   connectForum().catch((err) => {
@@ -1059,16 +1063,11 @@ async function connectForum() {
     setForumStatus("Live ✅");
     setForumUIEnabled(true);
 
-    const q =_srct_query(
+    const q = query(
       collection(db, "forums", FORUM_ID, "messages"),
       orderBy("createdAtMs", "desc"),
       limit(120)
     );
-
-    // helper wrapper to avoid bundler highlighting; keeps identical behavior
-    function _srct_query(...args) {
-      return query(...args);
-    }
 
     unsubForum = onSnapshot(
       q,
@@ -1087,15 +1086,14 @@ async function connectForum() {
         const changes = snap.docChanges();
         for (const ch of changes) {
           if (ch.type !== "added") continue;
+
           const data = { id: ch.doc.id, ...ch.doc.data() };
 
           // ignore local pending write (your own send) if possible
           if (ch.doc.metadata?.hasPendingWrites) continue;
 
-          // prevent duplicate notification storms
           if (data.id && data.id === lastNotifiedMsgId) continue;
 
-          // notify for the newest ones (query is desc)
           notifyNewMessage(data);
           lastNotifiedMsgId = data.id;
           break;
@@ -1124,7 +1122,6 @@ async function sendForumMessage() {
   const user = loadUser();
   const name = user?.name ? String(user.name).slice(0, 30) : "Student";
 
-  // prepare payload
   const text = textRaw.slice(0, 220);
   const mentions = extractMentions(text);
 
@@ -1156,6 +1153,7 @@ async function sendForumMessage() {
     if (replyTo) payload.replyTo = replyTo;
 
     await addDoc(collection(db, "forums", FORUM_ID, "messages"), payload);
+    setForumStatus("Live ✅");
   } catch (err) {
     console.error("FORUM SEND FAILED:", err);
     alert("Send failed: " + err.message);
