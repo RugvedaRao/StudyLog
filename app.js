@@ -123,6 +123,35 @@ const EXAM_DATE_KEY = "ca_exam_date_v3";
 const TODO_KEY = "ca_todo_list_v1";
 const THEME_KEY = "ca_theme_v1";
 const USER_KEY = "ca_user_v1";
+// ----------------------------
+// Unread badge (WhatsApp-like)
+// ----------------------------
+const FORUM_LAST_READ_MS_KEY = "ca_forum_last_read_ms_v1";
+
+let isForumOpen = false;
+
+function getLastReadMs() {
+  const v = Number(localStorage.getItem(FORUM_LAST_READ_MS_KEY) || 0);
+  return Number.isFinite(v) ? v : 0;
+}
+function setLastReadMs(ms) {
+  localStorage.setItem(FORUM_LAST_READ_MS_KEY, String(Number(ms || Date.now())));
+}
+
+function setUnreadBadge(count) {
+  const badge = $("unreadBadge");
+  if (!badge) return;
+
+  const n = Math.max(0, Number(count || 0));
+  if (n <= 0) {
+    badge.style.display = "none";
+    badge.textContent = "0";
+    return;
+  }
+
+  badge.style.display = "inline-flex";
+  badge.textContent = n > 99 ? "99+" : String(n);
+}
 
 const $ = (id) => document.getElementById(id);
 
@@ -1023,11 +1052,12 @@ async function initFirebase() {
 
 // ✅ Open forum screen
 function showForum() {
+  isForumOpen = true; // ✅ ADD THIS LINE
+
   $("homeScreen")?.classList.add("hidden");
   $("subjectScreen")?.classList.add("hidden");
   $("forumScreen")?.classList.remove("hidden");
 
-  // user gesture (button click) => safe to request permission here
   ensureNotificationPermissionFromUserGesture();
 
   connectForum().catch((err) => {
@@ -1037,13 +1067,24 @@ function showForum() {
 }
 
 function hideForum() {
+  isForumOpen = false; // ✅ ADD THIS LINE
+
   $("forumScreen")?.classList.add("hidden");
   clearReplyBanner();
   showMentionBox([]);
   showHome();
 }
 
-async function connectForum() {
+async function connectForum(unsubForum = onSnapshot(
+  q,
+  (snap) => {
+    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
+    renderForumMessages(docs);
+
+    // Notifications: avoid notifying on first load
+    if (!initialForumLoadDone) {
+      ...
+) {
   try {
     await initFirebase();
 
@@ -1074,6 +1115,35 @@ async function connectForum() {
       (snap) => {
         const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
         renderForumMessages(docs);
+        // ✅ Unread badge logic
+        const latestMsgMs = Number(docs?.[0]?.createdAtMs || 0);
+        const lastReadMs = getLastReadMs();
+
+        // Optional: do not count your own messages
+        const me = (loadUser()?.name || "").trim().toLowerCase();
+
+        let unreadCount = 0;
+        if (lastReadMs > 0) {
+          unreadCount = docs.filter((m) => {
+            const t = Number(m?.createdAtMs || 0);
+            if (!t || t <= lastReadMs) return false;
+            const author = String(m?.name || "").trim().toLowerCase();
+            if (me && author === me) return false; // ignore my own
+            return true;
+          }).length;
+        } else {
+          // First time ever: don't show a huge number; start tracking from latest
+          if (latestMsgMs) setLastReadMs(latestMsgMs);
+          unreadCount = 0;
+        }
+
+        if (isForumOpen) {
+          // When user is in forum, consider everything read
+          if (latestMsgMs) setLastReadMs(latestMsgMs);
+          setUnreadBadge(0);
+        } else {
+          setUnreadBadge(unreadCount);
+        }
 
         // Notifications: avoid notifying on first load
         if (!initialForumLoadDone) {
@@ -1217,6 +1287,12 @@ function bindForumUI() {
 // ----------------------------
 // DOM Ready
 // ----------------------------
+    document.addEventListener("visibilitychange", () => {
+  if (!isForumOpen) return;
+  if (document.hidden) return;
+  setUnreadBadge(0);
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initUserCapture();
