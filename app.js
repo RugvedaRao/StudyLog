@@ -719,6 +719,7 @@ function bindTodo() {
 }
 
 // ============================
+// ============================
 // ✅ PUBLIC DISCUSSION FORUM (Firestore) + WhatsApp-like upgrades
 // ============================
 
@@ -752,7 +753,7 @@ function setForumStatus(text) {
   const el = $("forumStatus");
   if (!el) return;
   el.textContent = text || "";
-  el.classList.remove("hidden"); // show status when we have any text
+  el.classList.remove("hidden");
 }
 
 function formatTimeFromMs(ms) {
@@ -821,9 +822,7 @@ async function ensureNotificationPermissionFromUserGesture() {
   if (Notification.permission === "default") {
     try {
       await Notification.requestPermission();
-    } catch {
-      // ignore
-    }
+    } catch {}
   }
 }
 function playNewMsgBeep() {
@@ -840,15 +839,12 @@ function playNewMsgBeep() {
     osc.start();
     osc.stop(ctx.currentTime + 0.07);
     osc.onended = () => ctx.close();
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 function notifyNewMessage(msg) {
   if (!canNotify()) return;
   if (Notification.permission !== "granted") return;
 
-  // Only notify when user is not focused on tab
   const shouldNotify = document.hidden || !document.hasFocus();
   if (!shouldNotify) return;
 
@@ -857,9 +853,7 @@ function notifyNewMessage(msg) {
 
   try {
     new Notification(title, { body });
-  } catch {
-    // ignore
-  }
+  } catch {}
 
   playNewMsgBeep();
 }
@@ -889,7 +883,6 @@ function getMentionQueryAtCaret(inputEl) {
   const pos = inputEl.selectionStart ?? text.length;
   const upto = text.slice(0, pos);
 
-  // Find last @ token not separated by whitespace
   const m = upto.match(/(^|\s)@([\w.]*)$/);
   if (!m) return null;
   return {
@@ -939,14 +932,13 @@ function insertMention(name) {
   const text = input.value || "";
   const before = text.slice(0, info.startIndex);
   const after = text.slice(info.endIndex);
-  const mentionToken = `@${name.replace(/\s+/g, "")}`; // WhatsApp-like (no spaces)
+  const mentionToken = `@${name.replace(/\s+/g, "")}`;
 
   const spacer = after.startsWith(" ") ? "" : " ";
   const next = before + mentionToken + spacer + after;
 
   input.value = next;
 
-  // Place caret after inserted mention
   const newPos = (before + mentionToken + " ").length;
   input.focus();
   input.setSelectionRange(newPos, newPos);
@@ -955,8 +947,7 @@ function insertMention(name) {
 }
 
 // ----------------------------
-// Forum render (Newest FIRST + Date separators + Reply quote + Mention highlight)
-// (Updated to match your new CSS classes: replyQuote, isReply, etc.)
+// Forum render
 // ----------------------------
 function renderForumMessages(msgs) {
   const list = $("forumMessages");
@@ -1015,7 +1006,6 @@ function renderForumMessages(msgs) {
 
   list.innerHTML = html;
 
-  // Bind reply buttons
   list.querySelectorAll(".replyBtn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const msgId = btn.getAttribute("data-replyid");
@@ -1031,7 +1021,6 @@ function renderForumMessages(msgs) {
     });
   });
 
-  // Newest first => keep at TOP
   list.scrollTop = 0;
 }
 
@@ -1052,7 +1041,7 @@ async function initFirebase() {
 
 // ✅ Open forum screen
 function showForum() {
-  isForumOpen = true; // ✅ ADD THIS LINE
+  isForumOpen = true;
 
   $("homeScreen")?.classList.add("hidden");
   $("subjectScreen")?.classList.add("hidden");
@@ -1067,7 +1056,7 @@ function showForum() {
 }
 
 function hideForum() {
-  isForumOpen = false; // ✅ ADD THIS LINE
+  isForumOpen = false;
 
   $("forumScreen")?.classList.add("hidden");
   clearReplyBanner();
@@ -1075,16 +1064,7 @@ function hideForum() {
   showHome();
 }
 
-async function connectForum(unsubForum = onSnapshot(
-  q,
-  (snap) => {
-    const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
-    renderForumMessages(docs);
-
-    // Notifications: avoid notifying on first load
-    if (!initialForumLoadDone) {
-      ...
-) {
+async function connectForum() {
   try {
     await initFirebase();
 
@@ -1113,13 +1093,13 @@ async function connectForum(unsubForum = onSnapshot(
     unsubForum = onSnapshot(
       q,
       (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
         renderForumMessages(docs);
+
         // ✅ Unread badge logic
         const latestMsgMs = Number(docs?.[0]?.createdAtMs || 0);
         const lastReadMs = getLastReadMs();
 
-        // Optional: do not count your own messages
         const me = (loadUser()?.name || "").trim().toLowerCase();
 
         let unreadCount = 0;
@@ -1128,17 +1108,15 @@ async function connectForum(unsubForum = onSnapshot(
             const t = Number(m?.createdAtMs || 0);
             if (!t || t <= lastReadMs) return false;
             const author = String(m?.name || "").trim().toLowerCase();
-            if (me && author === me) return false; // ignore my own
+            if (me && author === me) return false;
             return true;
           }).length;
         } else {
-          // First time ever: don't show a huge number; start tracking from latest
           if (latestMsgMs) setLastReadMs(latestMsgMs);
           unreadCount = 0;
         }
 
         if (isForumOpen) {
-          // When user is in forum, consider everything read
           if (latestMsgMs) setLastReadMs(latestMsgMs);
           setUnreadBadge(0);
         } else {
@@ -1152,16 +1130,13 @@ async function connectForum(unsubForum = onSnapshot(
           return;
         }
 
-        // Find newly added docs
         const changes = snap.docChanges();
         for (const ch of changes) {
           if (ch.type !== "added") continue;
 
           const data = { id: ch.doc.id, ...ch.doc.data() };
 
-          // ignore local pending write (your own send) if possible
           if (ch.doc.metadata?.hasPendingWrites) continue;
-
           if (data.id && data.id === lastNotifiedMsgId) continue;
 
           notifyNewMessage(data);
@@ -1283,74 +1258,3 @@ function bindForumUI() {
   setForumStatus("Offline");
   setForumUIEnabled(false);
 }
-
-// ----------------------------
-// DOM Ready
-// ----------------------------
-    document.addEventListener("visibilitychange", () => {
-  if (!isForumOpen) return;
-  if (document.hidden) return;
-  setUnreadBadge(0);
-});
-
-document.addEventListener("DOMContentLoaded", async () => {
-  initTheme();
-  initUserCapture();
-
-  loadDailyQuote();
-  renderHome();
-  updateCountdownDisplay();
-  showHome();
-
-  $("countdownPill")?.addEventListener("click", promptSetExamDate);
-
-  $("doneBtn")?.addEventListener("click", showHome);
-  $("backBtn")?.addEventListener("click", showHome);
-
-  $("markAll")?.addEventListener("click", () => {
-    if (!currentSubject) return;
-    const state = loadState();
-    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
-    saveState(state);
-    renderSubject();
-    renderHome();
-  });
-
-  $("clearAll")?.addEventListener("click", () => {
-    if (!currentSubject) return;
-    const state = loadState();
-    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
-    saveState(state);
-    renderSubject();
-    renderHome();
-  });
-
-  $("resetAll")?.addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY);
-    if (currentSubject) renderSubject();
-    renderHome();
-  });
-
-  // Timer
-  $("openTimerBtn")?.addEventListener("click", openTimer);
-  $("closeTimerBtn")?.addEventListener("click", closeTimer);
-
-  $("timerModal")?.addEventListener("click", (e) => {
-    if (e.target === $("timerModal")) closeTimer();
-  });
-
-  $("startTimerBtn")?.addEventListener("click", startTimer);
-  $("pauseTimerBtn")?.addEventListener("click", pauseTimer);
-  $("resetTimerBtn")?.addEventListener("click", resetTimer);
-  $("alarmOkBtn")?.addEventListener("click", hideAlarmPopup);
-
-  renderTimer();
-  setButtonsState();
-
-  // To-do
-  bindTodo();
-  renderTodos();
-
-  // ✅ Public Discussion Forum
-  bindForumUI();
-});
