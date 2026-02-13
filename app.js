@@ -1,14 +1,37 @@
 // ============================
-// CA Foundation Tracker + Public Discussion Forum (FULL, updated for new HTML/CSS)
+// CA Foundation Tracker + Public Discussion Forum (FULL)
 // - Newest messages TOP
 // - Date separators (WhatsApp-like)
 // - Reply (banner + quote block)
 // - @mentions (autocomplete + highlight)
 // - Notifications (browser + beep)
+// - Unread badge on "Public Discussion Forum" button (WhatsApp-like)
 // - One global public forum (Firestore)
 // - Forum input on top, messages below
 // - Google Sheet logging (Apps Script Web App)
 // ============================
+
+// ----------------------------
+// Helpers
+// ----------------------------
+const $ = (id) => document.getElementById(id);
+
+function safeParse(x) {
+  try {
+    return JSON.parse(x);
+  } catch {
+    return null;
+  }
+}
+
+function escapeHTML(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 // ----------------------------
 // ✅ Google Sheet Logging (Apps Script Web App URL)
@@ -56,7 +79,7 @@ function loadDailyQuote() {
   const today = new Date();
   const dayIndex = Math.floor(today.getTime() / (1000 * 60 * 60 * 24));
   const quote = QUOTES[dayIndex % QUOTES.length];
-  const el = document.getElementById("quoteText");
+  const el = $("quoteText");
   if (el) el.textContent = quote;
 }
 
@@ -118,16 +141,19 @@ const SUBJECTS = {
   ],
 };
 
+// ----------------------------
+// Storage keys
+// ----------------------------
 const STORAGE_KEY = "ca_foundation_tracker_v2";
 const EXAM_DATE_KEY = "ca_exam_date_v3";
 const TODO_KEY = "ca_todo_list_v1";
 const THEME_KEY = "ca_theme_v1";
 const USER_KEY = "ca_user_v1";
+
 // ----------------------------
-// Unread badge (WhatsApp-like)
+// ✅ Unread badge (WhatsApp-like)
 // ----------------------------
 const FORUM_LAST_READ_MS_KEY = "ca_forum_last_read_ms_v1";
-
 let isForumOpen = false;
 
 function getLastReadMs() {
@@ -137,7 +163,6 @@ function getLastReadMs() {
 function setLastReadMs(ms) {
   localStorage.setItem(FORUM_LAST_READ_MS_KEY, String(Number(ms || Date.now())));
 }
-
 function setUnreadBadge(count) {
   const badge = $("unreadBadge");
   if (!badge) return;
@@ -148,19 +173,8 @@ function setUnreadBadge(count) {
     badge.textContent = "0";
     return;
   }
-
   badge.style.display = "inline-flex";
   badge.textContent = n > 99 ? "99+" : String(n);
-}
-
-const $ = (id) => document.getElementById(id);
-
-function safeParse(x) {
-  try {
-    return JSON.parse(x);
-  } catch {
-    return null;
-  }
 }
 
 // ----------------------------
@@ -320,8 +334,7 @@ function ddmmyyyyToISO(ddmmyyyy) {
 
   const d = new Date(`${m[3]}-${m[2]}-${m[1]}T00:00:00`);
   if (Number.isNaN(d.getTime())) return null;
-  if (d.getFullYear() !== yyyy || d.getMonth() + 1 !== mm || d.getDate() !== dd)
-    return null;
+  if (d.getFullYear() !== yyyy || d.getMonth() + 1 !== mm || d.getDate() !== dd) return null;
 
   return `${m[3]}-${m[2]}-${m[1]}`;
 }
@@ -425,7 +438,7 @@ function renderHome() {
     const card = document.createElement("div");
     card.className = "meterCard";
     card.innerHTML = `
-      <div class="ring" aria-label="${subj} progress">
+      <div class="ring" aria-label="${escapeHTML(subj)} progress">
         <div class="pct" id="pct_${id}">${pct}%</div>
         <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
           <circle cx="60" cy="60" r="45" fill="none"
@@ -439,7 +452,7 @@ function renderHome() {
         </svg>
       </div>
 
-      <div class="subjectName">${subj}</div>
+      <div class="subjectName">${escapeHTML(subj)}</div>
       <div class="doneText">${done}/${total} done</div>
     `;
 
@@ -472,7 +485,7 @@ function renderSubject() {
     const row = document.createElement("div");
     row.className = "topicRow";
     row.innerHTML = `
-      <div class="topicName">${topic}</div>
+      <div class="topicName">${escapeHTML(topic)}</div>
       <input type="checkbox" id="cb_${idx}" />
     `;
 
@@ -515,7 +528,7 @@ function startAlarmLoop() {
   alarmCtx.resume?.();
 
   const beepDuration = 0.08;
-  const gap = 0.20;
+  const gap = 0.2;
   const beepsPerCycle = 4;
 
   function playPattern() {
@@ -573,8 +586,7 @@ function renderTimer() {
 }
 function setButtonsState() {
   $("pauseTimerBtn") && ($("pauseTimerBtn").disabled = !running);
-  $("resetTimerBtn") &&
-    ($("resetTimerBtn").disabled = running ? false : remainingSeconds === 0);
+  $("resetTimerBtn") && ($("resetTimerBtn").disabled = running ? false : remainingSeconds === 0);
 }
 function openTimer() {
   $("timerModal")?.classList.remove("hidden");
@@ -656,15 +668,6 @@ function resetTimer() {
 // ----------------------------
 // To-Do
 // ----------------------------
-function escapeHTML(str) {
-  return String(str)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
 function loadTodos() {
   const raw = localStorage.getItem(TODO_KEY);
   try {
@@ -719,8 +722,7 @@ function bindTodo() {
 }
 
 // ============================
-// ============================
-// ✅ PUBLIC DISCUSSION FORUM (Firestore) + WhatsApp-like upgrades
+// ✅ PUBLIC DISCUSSION FORUM (Firestore)
 // ============================
 
 // Firebase config
@@ -845,6 +847,7 @@ function notifyNewMessage(msg) {
   if (!canNotify()) return;
   if (Notification.permission !== "granted") return;
 
+  // Only notify when user is not focused on tab
   const shouldNotify = document.hidden || !document.hasFocus();
   if (!shouldNotify) return;
 
@@ -932,13 +935,14 @@ function insertMention(name) {
   const text = input.value || "";
   const before = text.slice(0, info.startIndex);
   const after = text.slice(info.endIndex);
-  const mentionToken = `@${name.replace(/\s+/g, "")}`;
+  const mentionToken = `@${name.replace(/\s+/g, "")}`; // WhatsApp-like (no spaces)
 
   const spacer = after.startsWith(" ") ? "" : " ";
   const next = before + mentionToken + spacer + after;
 
   input.value = next;
 
+  // Place caret after inserted mention
   const newPos = (before + mentionToken + " ").length;
   input.focus();
   input.setSelectionRange(newPos, newPos);
@@ -1006,6 +1010,7 @@ function renderForumMessages(msgs) {
 
   list.innerHTML = html;
 
+  // Bind reply buttons
   list.querySelectorAll(".replyBtn").forEach((btn) => {
     btn.addEventListener("click", () => {
       const msgId = btn.getAttribute("data-replyid");
@@ -1021,18 +1026,15 @@ function renderForumMessages(msgs) {
     });
   });
 
+  // Newest first => keep at TOP
   list.scrollTop = 0;
 }
 
 async function initFirebase() {
   if (db) return db;
 
-  const { initializeApp } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"
-  );
-  const { getFirestore } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
-  );
+  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
@@ -1047,6 +1049,7 @@ function showForum() {
   $("subjectScreen")?.classList.add("hidden");
   $("forumScreen")?.classList.remove("hidden");
 
+  // user gesture (button click) => safe to request permission here
   ensureNotificationPermissionFromUserGesture();
 
   connectForum().catch((err) => {
@@ -1093,13 +1096,14 @@ async function connectForum() {
     unsubForum = onSnapshot(
       q,
       (snap) => {
-        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        const docs = snap.docs.map((d) => ({ id: d.id, ...d.data() })); // newest first
         renderForumMessages(docs);
 
         // ✅ Unread badge logic
         const latestMsgMs = Number(docs?.[0]?.createdAtMs || 0);
         const lastReadMs = getLastReadMs();
 
+        // Optional: don't count your own messages (name-based)
         const me = (loadUser()?.name || "").trim().toLowerCase();
 
         let unreadCount = 0;
@@ -1112,6 +1116,7 @@ async function connectForum() {
             return true;
           }).length;
         } else {
+          // first time -> start tracking from latest
           if (latestMsgMs) setLastReadMs(latestMsgMs);
           unreadCount = 0;
         }
@@ -1130,13 +1135,16 @@ async function connectForum() {
           return;
         }
 
+        // Find newly added docs
         const changes = snap.docChanges();
         for (const ch of changes) {
           if (ch.type !== "added") continue;
 
           const data = { id: ch.doc.id, ...ch.doc.data() };
 
+          // ignore local pending write (your own send)
           if (ch.doc.metadata?.hasPendingWrites) continue;
+
           if (data.id && data.id === lastNotifiedMsgId) continue;
 
           notifyNewMessage(data);
@@ -1258,3 +1266,78 @@ function bindForumUI() {
   setForumStatus("Offline");
   setForumUIEnabled(false);
 }
+
+// If user returns to tab while forum is open, ensure badge cleared
+document.addEventListener("visibilitychange", () => {
+  if (!isForumOpen) return;
+  if (document.hidden) return;
+  setUnreadBadge(0);
+});
+
+// ----------------------------
+// DOM Ready
+// ----------------------------
+document.addEventListener("DOMContentLoaded", async () => {
+  initTheme();
+  initUserCapture();
+
+  loadDailyQuote();
+  renderHome();
+  updateCountdownDisplay();
+  showHome();
+
+  $("countdownPill")?.addEventListener("click", promptSetExamDate);
+
+  $("doneBtn")?.addEventListener("click", showHome);
+  $("backBtn")?.addEventListener("click", showHome);
+
+  $("markAll")?.addEventListener("click", () => {
+    if (!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(true);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("clearAll")?.addEventListener("click", () => {
+    if (!currentSubject) return;
+    const state = loadState();
+    state[currentSubject] = Array(SUBJECTS[currentSubject].length).fill(false);
+    saveState(state);
+    renderSubject();
+    renderHome();
+  });
+
+  $("resetAll")?.addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY);
+    if (currentSubject) renderSubject();
+    renderHome();
+  });
+
+  // Timer
+  $("openTimerBtn")?.addEventListener("click", openTimer);
+  $("closeTimerBtn")?.addEventListener("click", closeTimer);
+
+  $("timerModal")?.addEventListener("click", (e) => {
+    if (e.target === $("timerModal")) closeTimer();
+  });
+
+  $("startTimerBtn")?.addEventListener("click", startTimer);
+  $("pauseTimerBtn")?.addEventListener("click", pauseTimer);
+  $("resetTimerBtn")?.addEventListener("click", resetTimer);
+  $("alarmOkBtn")?.addEventListener("click", hideAlarmPopup);
+
+  renderTimer();
+  setButtonsState();
+
+  // To-do
+  bindTodo();
+  renderTodos();
+
+  // ✅ Public Discussion Forum
+  bindForumUI();
+
+  // Ensure badge hidden on first load if no stored unread
+  setUnreadBadge(0);
+});
