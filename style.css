@@ -1100,3 +1100,101 @@ body[data-theme="light"] .alarmMsg{ color: rgba(0,0,0,.70); }
 body[data-theme="light"] .unreadBadge{
   border: 2px solid rgba(255,255,255,.95);
 }
+/* ============================
+   Leaderboard (Snapchat-like)
+   ============================ */
+.leaderboardCard{
+  width:100%;
+  min-height:210px;
+  padding:14px 12px 12px;
+  border-radius:18px;
+  background: var(--tileBg);
+  border: 1px solid var(--tileBorder);
+  box-shadow:none;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+}
+
+.lbTitle{
+  font-weight:900;
+  font-size:16px;
+  margin-bottom:8px;
+  color: var(--text);
+}
+
+.lbList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.lbRow{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:10px 10px;
+  border-radius:14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.06);
+}
+
+body[data-theme="light"] .lbRow{
+  background: rgba(0,0,0,.04);
+  border: 1px solid rgba(0,0,0,.06);
+}
+
+.lbLeft{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+}
+
+.lbRank{
+  width:26px;
+  height:26px;
+  border-radius:8px;
+  display:grid;
+  place-items:center;
+  font-weight:1000;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+body[data-theme="light"] .lbRank{
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(0,0,0,.10);
+}
+
+.lbName{
+  font-weight:900;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width: 160px;
+}
+
+.lbStreak{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-weight:1000;
+}
+
+.lbFire{
+  filter: drop-shadow(0 2px 6px rgba(255,140,0,.35));
+}
+
+.lbLoading{
+  opacity:.85;
+  font-weight:800;
+  font-size:14px;
+  padding:6px 4px;
+}
+
+/* Responsive: when extrasGrid becomes 2 columns, make leaderboard full width */
+@media (max-width: 980px){
+  .leaderboardCard{ grid-column: 1 / span 2; min-height: unset; }
+}
