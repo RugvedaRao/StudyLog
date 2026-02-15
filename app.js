@@ -1029,57 +1029,6 @@ function renderForumMessages(msgs) {
   // Newest first => keep at TOP
   list.scrollTop = 0;
 }
-
-async function initFirebase() // ============================
-// ✅ LEADERBOARD + SNAPCHAT-LIKE STREAK (Firestore)
-// ============================
-
-// --- Date helpers (safe + simple) ---
-function todayYYYYMMDD() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-function monthYYYYMM() {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  return `${yyyy}-${mm}`;
-}
-function yyyymmddToDate(s) {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
-  if (!m) return null;
-  const dt = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`);
-  return Number.isNaN(dt.getTime()) ? null : dt;
-}
-function diffDays(fromYYYYMMDD, toYYYYMMDD) {
-  const a = yyyymmddToDate(fromYYYYMMDD);
-  const b = yyyymmddToDate(toYYYYMMDD);
-  if (!a || !b) return null;
-  const ms = b.getTime() - a.getTime();
-  return Math.floor(ms / 86400000);
-}
-
-// --- A stable doc id (since you don't use Firebase Auth yet) ---
-// Uses email if available; otherwise falls back to a stored random id.
-// (If you later add Firebase Auth, replace this with request.auth.uid.)
-function getUserDocId() {
-  const u = loadUser();
-  const email = String(u?.email || "").trim().toLowerCase();
-  if (email) return email.replace(/[^a-z0-9._-]/g, "_");
-
-  const k = "ca_uid_local_v1";
-  let id = localStorage.getItem(k);
-  if (!id) {
-    id = "u_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    localStorage.setItem(k, id);
-  }
-  return id;
-}
-
-// --- Main: update streak once per day when user visits dashboard ---
 async function updateStreakOnDashboardOpenSnapchatLike() {
   const user = loadUser();
   if (!user?.name) return; // needs name/email captured first
