@@ -1030,7 +1030,226 @@ function renderForumMessages(msgs) {
   list.scrollTop = 0;
 }
 
-async function initFirebase() {
+async function initFirebase() // ============================
+// ✅ LEADERBOARD + SNAPCHAT-LIKE STREAK (Firestore)
+// ============================
+
+// --- Date helpers (safe + simple) ---
+function todayYYYYMMDD() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+function monthYYYYMM() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  return `${yyyy}-${mm}`;
+}
+function yyyymmddToDate(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+  if (!m) return null;
+  const dt = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`);
+  return Number.isNaN(dt.getTime()) ? null : dt;
+}
+function diffDays(fromYYYYMMDD, toYYYYMMDD) {
+  const a = yyyymmddToDate(fromYYYYMMDD);
+  const b = yyyymmddToDate(toYYYYMMDD);
+  if (!a || !b) return null;
+  const ms = b.getTime() - a.getTime();
+  return Math.floor(ms / 86400000);
+}
+
+// --- A stable doc id (since you don't use Firebase Auth yet) ---
+// Uses email if available; otherwise falls back to a stored random id.
+// (If you later add Firebase Auth, replace this with request.auth.uid.)
+function getUserDocId() {
+  const u = loadUser();
+  const email = String(u?.email || "").trim().toLowerCase();
+  if (email) return email.replace(/[^a-z0-9._-]/g, "_");
+
+  const k = "ca_uid_local_v1";
+  let id = localStorage.getItem(k);
+  if (!id) {
+    id = "u_" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    localStorage.setItem(k, id);
+  }
+  return id;
+}
+
+// --- Main: update streak once per day when user visits dashboard ---
+async function updateStreakOnDashboardOpenSnapchatLike() {
+  const user = loadUser();
+  if (!user?.name) return; // needs name/email captured first
+
+  await initFirebase();
+  const { doc, getDoc, setDoc, updateDoc, serverTimestamp } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
+  );
+
+  const uid = getUserDocId();
+  const ref = doc(db, "users", uid);
+
+  const today = todayYYYYMMDD();
+  const thisMonth = monthYYYYMM();
+
+  const snap = await getDoc(ref);
+
+  // If first time: create user doc
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      displayName: String(user.name).slice(0, 30),
+      currentStreak: 1,
+      lastLoginDate: today,
+      restoresRemaining: 2,
+      restoreMonth: thisMonth,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+
+  const data = snap.data() || {};
+  const lastLoginDate = String(data.lastLoginDate || "");
+  let currentStreak = Number(data.currentStreak || 0);
+  let restoresRemaining = Number(data.restoresRemaining ?? 2);
+  let restoreMonth = String(data.restoreMonth || "");
+
+  // Monthly reset for restores
+  if (restoreMonth !== thisMonth) {
+    restoreMonth = thisMonth;
+    restoresRemaining = 2;
+  }
+
+  // If already logged in today → only update name/month fields
+  if (lastLoginDate === today) {
+    await updateDoc(ref, {
+      displayName: String(user.name).slice(0, 30),
+      restoresRemaining,
+      restoreMonth,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+
+  // Determine day gap
+  const gap = diffDays(lastLoginDate, today);
+
+  // If lastLoginDate invalid, treat as fresh start
+  if (gap === null) {
+    await updateDoc(ref, {
+      displayName: String(user.name).slice(0, 30),
+      currentStreak: 1,
+      lastLoginDate: today,
+      restoresRemaining,
+      restoreMonth,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+
+  if (gap === 1) {
+    // Normal streak continuation
+    currentStreak = Math.max(0, currentStreak) + 1;
+
+    await updateDoc(ref, {
+      displayName: String(user.name).slice(0, 30),
+      currentStreak,
+      lastLoginDate: today,
+      restoresRemaining,
+      restoreMonth,
+      updatedAt: serverTimestamp(),
+    });
+    return;
+  }
+
+  if (gap > 1) {
+    // Snapchat-like restore prompt
+    if (restoresRemaining > 0) {
+      const ok = confirm(
+        `You missed a day.\nRestore streak? (${restoresRemaining} restore(s) left this month)`
+      );
+
+      if (ok) {
+        restoresRemaining = restoresRemaining - 1;
+        currentStreak = Math.max(0, currentStreak) + 1; // keep streak alive like Snapchat
+
+        await updateDoc(ref, {
+          displayName: String(user.name).slice(0, 30),
+          currentStreak,
+          lastLoginDate: today,
+          restoresRemaining,
+          restoreMonth,
+          updatedAt: serverTimestamp(),
+        });
+        return;
+      }
+    }
+
+    // No restore (or user declined) → reset streak
+    await updateDoc(ref, {
+      displayName: String(user.name).slice(0, 30),
+      currentStreak: 1,
+      lastLoginDate: today,
+      restoresRemaining,
+      restoreMonth,
+      updatedAt: serverTimestamp(),
+    });
+  }
+}
+
+// --- Leaderboard: load top 3 by streak ---
+async function loadLeaderboardTop3() {
+  const listEl = $("leaderboardList");
+  if (!listEl) return;
+
+  listEl.innerHTML = `<div class="lb-loading">Loading...</div>`;
+
+  await initFirebase();
+  const { collection, query, orderBy, limit, getDocs } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
+  );
+
+  try {
+    const q = query(collection(db, "users"), orderBy("currentStreak", "desc"), limit(3));
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+      listEl.innerHTML = `<div class="lb-loading">No users yet.</div>`;
+      return;
+    }
+
+    let rank = 1;
+    const rows = [];
+
+    snap.forEach((docu) => {
+      const d = docu.data() || {};
+      const name = escapeHTML(d.displayName || "Student");
+      const streak = Number(d.currentStreak || 0);
+
+      rows.push(`
+        <div class="lb-row">
+          <div class="lb-left">
+            <div class="lb-rank">${rank}</div>
+            <div class="lb-name">${name}</div>
+          </div>
+          <div class="lb-streak">
+            <span class="lb-fire">🔥</span>
+            <span>${streak}</span>
+          </div>
+        </div>
+      `);
+      rank += 1;
+    });
+
+    listEl.innerHTML = rows.join("");
+  } catch (err) {
+    console.error(err);
+    listEl.innerHTML = `<div class="lb-loading">Failed to load.</div>`;
+  }
+}
+{
   if (db) return db;
 
   const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
@@ -1280,7 +1499,8 @@ document.addEventListener("visibilitychange", () => {
 document.addEventListener("DOMContentLoaded", async () => {
   initTheme();
   initUserCapture();
-
+    // ✅ Streak update + leaderboard
+  updateStreakOnDashboardOpenSnapchatLike().then(loadLeaderboardTop3);
   loadDailyQuote();
   renderHome();
   updateCountdownDisplay();
