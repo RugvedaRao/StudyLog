@@ -1199,68 +1199,20 @@ async function updateStreakOnDashboardOpenSnapchatLike() {
   }
 }
 
-// --- Leaderboard: load top 3 by streak ---
-async function loadLeaderboardTop3() {
-  const listEl = $("leaderboardList");
-  if (!listEl) return;
-
-  listEl.innerHTML = `<div class="lb-loading">Loading...</div>`;
-
-  await initFirebase();
-  const { collection, query, orderBy, limit, getDocs } = await import(
-    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
-  );
-
-  try {
-    const q = query(collection(db, "users"), orderBy("currentStreak", "desc"), limit(3));
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      listEl.innerHTML = `<div class="lb-loading">No users yet.</div>`;
-      return;
-    }
-
-    let rank = 1;
-    const rows = [];
-
-    snap.forEach((docu) => {
-      const d = docu.data() || {};
-      const name = escapeHTML(d.displayName || "Student");
-      const streak = Number(d.currentStreak || 0);
-
-      rows.push(`
-        <div class="lb-row">
-          <div class="lb-left">
-            <div class="lb-rank">${rank}</div>
-            <div class="lb-name">${name}</div>
-          </div>
-          <div class="lb-streak">
-            <span class="lb-fire">🔥</span>
-            <span>${streak}</span>
-          </div>
-        </div>
-      `);
-      rank += 1;
-    });
-
-    listEl.innerHTML = rows.join("");
-  } catch (err) {
-    console.error(err);
-    listEl.innerHTML = `<div class="lb-loading">Failed to load.</div>`;
-  }
-}
-{
+async function initFirebase() {
   if (db) return db;
 
-  const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
-  const { getFirestore } = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+  const { initializeApp } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js"
+  );
+  const { getFirestore } = await import(
+    "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
+  );
 
   const app = initializeApp(firebaseConfig);
   db = getFirestore(app);
   return db;
 }
-
-// ✅ Open forum screen
 function showForum() {
   isForumOpen = true;
 
